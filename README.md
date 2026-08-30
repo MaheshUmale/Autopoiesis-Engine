@@ -6,17 +6,27 @@
 
 ---
 
-## ⚡ 1-Line Automated Installation
+## ⚡ Direct 1-Line Installation Commands
 
-Choose your platform to run the single-command installer script:
+### Option A: Install Directly from Git Repo (Windows / macOS / Linux)
 
-### Windows (PowerShell):
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; .\install.ps1
+# Windows PowerShell / CMD / Terminal:
+pip install git+https://github.com/autopoiesis/autopoiesis-engine.git
+
+# Global installation via uv tool:
+uv tool install git+https://github.com/autopoiesis/autopoiesis-engine.git
 ```
 
-### Linux / macOS:
+### Option B: Run Automated Installer Script in Local Clone
+
+```powershell
+# Windows PowerShell:
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force; .\install.ps1
+```
+
 ```bash
+# Linux / macOS:
 chmod +x install.sh && ./install.sh
 ```
 
@@ -39,26 +49,20 @@ chmod +x install.sh && ./install.sh
 
 ## Quick Start Manual Commands
 
-```bash
-# 1. Install package in editable mode
+```powershell
+# Windows PowerShell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -e ".[dev]"
-
-# 2. Initialize project workspace & IDE configurations
 autopoiesis init
-
-# 3. Start local MCP daemon
-# stdio mode for IDEs:
 autopoiesis serve --mode stdio
-
-# HTTP server mode for web/daemon mode:
-autopoiesis serve --mode http --host 127.0.0.1 --port 8000
 ```
 
 ---
 
 ## Documentation
 
-- **[Installation Guide](INSTALLATION.md):** Step-by-step installation instructions for Linux, macOS, and Windows.
+- **[Installation Guide](INSTALLATION.md):** Detailed installation steps for Windows, macOS, and Linux.
 - **[Setup Guide](SETUP_GUIDE.md):** Configuration instructions for IDEs (Cursor, Claude Desktop, VS Code, Kilocode).
 - **[User Manual](USER_MANUAL.md):** Complete guide on CLI commands, MCP tool usage, DAG workflows, and Registry management.
-- **[Technical Specification](REQUIREMENTS.md):** Complete architectural requirements document.
+- **[Technical Specification](REQUIREMENTS.md):** Complete architectural requirements document (FRD & TRD).

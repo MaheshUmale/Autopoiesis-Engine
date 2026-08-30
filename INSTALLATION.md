@@ -1,6 +1,6 @@
 # Installation Guide: Autopoiesis-Engine
 
-This guide covers step-by-step installation instructions for `autopoiesis-engine` across Linux, macOS, and Windows.
+This guide covers step-by-step installation instructions for `autopoiesis-engine` across Windows, Linux, and macOS.
 
 ---
 
@@ -8,19 +8,42 @@ This guide covers step-by-step installation instructions for `autopoiesis-engine
 
 - **Python:** `>= 3.11`
 - **System Shell:**
-  - Linux / macOS: `/bin/bash` or `/bin/zsh`
   - Windows: PowerShell (`pwsh` or `powershell.exe`) or Command Prompt (`cmd.exe`)
+  - Linux / macOS: `/bin/bash` or `/bin/zsh`
+- **Git:** Installed and available in PATH.
 - **Temporal Server (Optional):** Required for production distributed workflow orchestration (`temporal server start-dev`).
 
 ---
 
-## Option 1: Automated 1-Click Installation (Recommended)
+## ⚡ Direct 1-Line Installation from Git Repository (Windows PowerShell)
+
+To install `autopoiesis-engine` directly from the Git repository into your Python environment without manually cloning first:
+
+```powershell
+# Install directly from GitHub using pip
+pip install git+https://github.com/autopoiesis/autopoiesis-engine.git
+
+# Or install globally as a tool using uv
+uv tool install git+https://github.com/autopoiesis/autopoiesis-engine.git
+
+# Or install globally using pipx
+pipx install git+https://github.com/autopoiesis/autopoiesis-engine.git
+```
+
+Then initialize your workspace in your project directory:
+```powershell
+autopoiesis init
+```
+
+---
+
+## Option 1: Automated Installer Script (Local Repository Clone)
 
 Run the included platform-specific installation script in your project directory:
 
 ### Windows (PowerShell):
 ```powershell
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; .\install.ps1
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force; .\install.ps1
 ```
 
 ### Linux / macOS:
@@ -41,16 +64,10 @@ cd autopoiesis-engine
 
 ### Step 1: Create and Activate Virtual Environment
 
-#### Linux / macOS:
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
 #### Windows (PowerShell):
 ```powershell
 python -m venv .venv
-Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force
 .\.venv\Scripts\Activate.ps1
 ```
 
@@ -60,30 +77,19 @@ python -m venv .venv
 .\.venv\Scripts\activate.bat
 ```
 
+#### Linux / macOS:
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
 ---
 
 ### Step 2: Install Package from Local Source Directory
 
-> **Important Note:** Do not run `uv tool install autopoiesis-engine` directly without specifying a local path before the package is published to PyPI. Always install from the local folder target `.`.
-
-#### Using `pip`:
-```bash
-pip install --upgrade pip
+```powershell
+python -m pip install --upgrade pip
 pip install -e ".[dev]"
-```
-
-#### Using `uv`:
-```bash
-# Install into active virtualenv using uv
-uv pip install -e .
-
-# Or install as a global tool from the local folder
-uv tool install .
-```
-
-#### Using `pipx`:
-```bash
-pipx install .
 ```
 
 ---
@@ -92,7 +98,7 @@ pipx install .
 
 After installing the package, run:
 
-```bash
+```powershell
 autopoiesis init
 ```
 
@@ -102,9 +108,9 @@ This creates `.autopoiesis/`, `registry/` directories, and generates/injects `mc
 
 ## Verifying Installation
 
-Run the following command to check if the CLI is correctly installed:
+Run the following command in PowerShell or terminal:
 
-```bash
+```powershell
 autopoiesis --help
 ```
 
