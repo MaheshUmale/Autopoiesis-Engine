@@ -16,9 +16,9 @@ This guide covers installing `autopoiesis-engine` across Linux, macOS, and Windo
 
 ## Installation Methods
 
-### Method 1: Local Development Installation (Recommended)
+### Method 1: Local Source Installation (Recommended for Development)
 
-Clone the repository and install in editable mode:
+Clone the repository, navigate into the directory, and install in editable mode:
 
 ```bash
 git clone https://github.com/autopoiesis/autopoiesis-engine.git
@@ -47,19 +47,31 @@ python -m venv .venv
 pip install -e ".[dev]"
 ```
 
+#### Using `uv` (Local Folder):
+When installing from a local repository clone (before PyPI release), install from the current directory `.`:
+```powershell
+# Install into active virtualenv using uv
+uv pip install -e .
+
+# Or install globally as a tool from local folder
+uv tool install .
+```
+
 ---
 
-### Method 2: Global Installation via `pipx` / `uv`
+### Method 2: Global Tool Installation via `pipx` / `uv`
 
-Install `autopoiesis-engine` as an isolated global CLI tool:
+To install the CLI tool globally from source directory:
 
-```bash
-# Using pipx
-pipx install autopoiesis-engine
+```powershell
+# Install from local directory using uv
+uv tool install .
 
-# Using uv (Recommended for speed)
-uv tool install autopoiesis-engine
+# Or install from local directory using pipx
+pipx install .
 ```
+
+> **Note:** Running `uv tool install autopoiesis-engine` without publishing to PyPI will fail with a `not found in package registry` error. Always specify the local directory path `.` when installing from source.
 
 ---
 
