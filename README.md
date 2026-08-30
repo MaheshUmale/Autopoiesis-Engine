@@ -301,3 +301,103 @@ class AgentWindowManager:
 3. **Execution Layer:** Implement `PlatformAdapter` and `SandboxExecutor` first, as they are the bedrock for all generated skill evaluations.
 4. **Temporal Workflows:** Map the logic in Section 7 exactly. Handle activity failures via Temporal's built-in `RetryPolicy`, routing terminal failures to a dedicated `SelfHealingWorkflow`.
 5. **No Placeholders:** Write complete, production-ready Python code. Implement explicit AST-hash checking for the deduplication requirement.
+
+
+The specification is exceptionally thorough, structurally complete, and covers almost every major engineering hurdle discussed. However, if an AI Coding Agent (such as Claude 3.5 Sonnet or Cursor) attempts to build this in a **single shot**, there are **three critical gaps** in the specification where the agent will be forced to make unguided architectural assumptions.
+
+Addressing these three specific areas will ensure the spec is 100% deterministic and ready for single-shot generation:
+
+---
+
+### 1. The MCP (Model Context Protocol) Server Integration Layer
+
+* **The Gap:** The spec references MCP in Section 3 and Section 6, but doesn't define *how* the engine serves these dynamically generated tools to target LLMs.
+* **Why it needs elaboration:** An AI coding agent won't know whether to write an HTTP/REST server, an stdio-based MCP wrapper, or an OpenAI-style function-calling schema.
+* **What to add to the Spec:**
+* Define an `MCPServer` wrapper that dynamically mounts files in `Level 1` and `Level 2` of the registry as live MCP Tools.
+* Explicitly specify that the server reads the `schema.json` of active namespaces and returns them via the standard MCP `tools/list` protocol endpoint.
+
+
+
+---
+
+### 2. The AST Hash Deduplication & Variation Rules
+
+* **The Gap:** Section 3 states: *"If the AST hash matches an existing skill, creation is bypassed."* However, earlier we agreed to **preserve contextual variations** rather than forcing bad over-generalizations.
+* **Why it needs elaboration:** Without exact rules, the AI coding agent will either reject useful domain-specific variations (because their logic looks similar) or flood the registry with near-duplicate code.
+* **What to add to the Spec:**
+* **Exact Deduplication Logic:** Strip docstrings, comments, and parameter variable names before AST hashing. If the normalized logic tree is identical, drop it.
+* **Variation Exception Rule:** If the AST logic differs by domain-specific AST nodes (e.g., custom API headers, specific authentication payload keys, specialized parsing rules), permit creation and save it under the specific `namespace` scope (e.g., `trading.upstox` vs. `trading.zerodha`), even if the high-level semantic vector embedding is close.
+
+
+
+---
+
+### 3. Concrete State Bridge between DAG Nodes (The Inter-Node Data Pipeline)
+
+* **The Gap:** Section 5 shows template nodes mapping outputs (`"args": { "raw_data": "{{ step_1.output }}" }`), but doesn't specify how large datasets (e.g., 100MB dataframes or file paths) move between workers without overwhelming memory or Temporal payload limits.
+* **Why it needs elaboration:** Temporal activities have payload size limits (typically ~2MB–4MB). Passing massive JSON payloads directly through activity return values will crash Temporal.
+* **What to add to the Spec:**
+* **The Data-Pointer Strategy (Threshold Rule):**
+* If payload size is $< 100 \text{ KB}$: Pass data inline as JSON directly in Temporal activity state.
+* If payload size is $\ge 100 \text{ KB}$: The micro-skill must serialize the data to a local staging store (e.g., `.autopoiesis/state/{execution_id}/{step_id}.parquet` or SQLite/S3) and pass an explicit **File Pointer URI** (`file://...`) to the next DAG node.
+
+
+
+
+
+---
+
+### Revised Addendum Snippet to Insert into Your Final Specification
+
+```markdown
+## 11. Core Addendums for Single-Shot Code Generation
+
+### A. Dynamic Model Context Protocol (MCP) Bridge
+The framework must include an `MCPToolRegistry` module using `mcp-attr` or official `mcp` SDK:
+1. Read active `namespace` directories from `registry/level_1_core/` and `registry/level_2_variants/`.
+2. Automatically transform every skill's `schema.json` into a live MCP `Tool` definition.
+3. Expose execution entrypoints through `mcp.types.Tool` with standard error wrapping (`isError: true` on Sandbox failure).
+
+### B. Normalized AST Deduplication Implementation
+```python
+import ast
+
+def get_normalized_ast_hash(python_code: str) -> str:
+    """Strips docstrings, comments, and variable identifiers to generate a structural AST fingerprint."""
+    tree = ast.parse(python_code)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)):
+            node.name = "_"
+        elif isinstance(node, ast.arg):
+            node.arg = "_"
+        elif isinstance(node, ast.Name):
+            node.id = "_"
+        # Strip docstrings
+        if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module)) and node.body:
+            if isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant):
+                node.body.pop(0)
+    return hashlib.sha256(ast.dump(tree).encode("utf-8")).hexdigest()
+
+```
+
+### C. Inter-Node State Passing & Temporal Payload Safety
+
+To avoid exceeding Temporal's activity payload limits:
+
+* **Small Payloads (< 100 KB):** Passed inline via Temporal activity return values.
+* **Large Payloads (>= 100 KB):** Serialized to disk/object storage (`.autopoiesis/staging/{execution_id}/{node_id}.parquet`), returning a payload pointer `{"_storage_type": "file", "path": "..."}`. The downstream node's runtime wrapper automatically hydrates this path back into a memory object.
+
+```
+
+---
+
+<ElicitationsGroup message="How would you like to proceed with finalizing the spec?">
+
+  <Elicitation label="Incorporate these 3 additions and output the consolidated final document" query="Please merge these 3 addendums into the full Technical Requirements Specification and output the final consolidated specification document."/>
+
+  <Elicitation label="Focus on the Python code implementation directly" query="The spec is ready. Let's begin generating the core Python codebase starting with Feature 1 and Feature 4."/>
+
+</ElicitationsGroup>
+
+```
