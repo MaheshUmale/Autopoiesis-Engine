@@ -4,6 +4,7 @@ import sqlite3
 from typing import Any, Dict, List
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from sse_starlette.sse import EventSourceResponse
 
 from mcp.server import MCPServer
 import mcp.types as types
@@ -19,7 +20,6 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
     def get_registry():
         return RegistryManager(base_dir=base_dir)
 
-    # Register dynamic tools
     registry = get_registry()
     with sqlite3.connect(registry.db_path) as conn:
         cursor = conn.cursor()
@@ -57,7 +57,7 @@ async def run_mcp_stdio_server():
 
 
 def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
-    """Creates FastAPI app for HTTP/SSE transport mode."""
+    """Creates FastAPI app for HTTP and SSE transport mode."""
     app = FastAPI(title="Autopoiesis Engine MCP Daemon")
 
     @app.get("/")
@@ -68,7 +68,9 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
             "status": "online",
             "endpoints": {
                 "list_tools": "/tools",
-                "execute_tool": "/tools/{skill_id}/execute"
+                "execute_tool": "/tools/{skill_id}/execute",
+                "sse": "/sse",
+                "messages": "/messages"
             }
         }
 
@@ -113,5 +115,47 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 }
             )
         return res.output_payload
+
+    @app.get("/sse")
+    async def handle_sse(request: Request):
+        """MCP Server-Sent Events (SSE) connection endpoint."""
+        async def event_generator():
+            # Initial endpoint event per MCP SSE specification
+            yield {
+                "event": "endpoint",
+                "data": "/messages?session_id=autopoiesis_local"
+            }
+            while True:
+                if await request.is_disconnected():
+                    break
+                await asyncio.sleep(15)
+                yield {"event": "ping", "data": "keep-alive"}
+
+        return EventSourceResponse(event_generator())
+
+    @app.post("/messages")
+    async def handle_messages(request: Request):
+        """MCP SSE messages handler."""
+        body = await request.json()
+        method = body.get("method")
+        msg_id = body.get("id")
+
+        if method == "tools/list":
+            registry = RegistryManager(base_dir=base_dir)
+            with sqlite3.connect(registry.db_path) as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT id, description, inputs_json FROM skills")
+                rows = cursor.fetchall()
+                tools = [
+                    {
+                        "name": r[0],
+                        "description": r[1],
+                        "inputSchema": json.loads(r[2])
+                    }
+                    for r in rows
+                ]
+            return {"jsonrpc": "2.0", "id": msg_id, "result": {"tools": tools}}
+
+        return {"jsonrpc": "2.0", "id": msg_id, "result": {}}
 
     return app
