@@ -1,6 +1,22 @@
 # Setup Guide: How AI Agents Connect & Execute Tools via MCP
 
-This guide explains **how `mcp.json` works**, how to fix **"unavailable tool" / MCP connection lost errors**, and how VS Code, Kilocode, Cursor, and Claude Desktop communicate with the Autopoiesis Engine.
+This guide explains **how `mcp.json` works**, how to fix **"unavailable tool" / MCP connection lost errors**, how to reset MCP configs, and how VS Code, Kilocode, Cursor, and Claude Desktop communicate with the Autopoiesis Engine.
+
+---
+
+## ⚡ How to Force Reset / Re-inject MCP Config Files (`autopoiesis mcp-install`)
+
+If your IDE loses the MCP connection or if you moved your project folder, run this single command in terminal or PowerShell:
+
+```powershell
+autopoiesis mcp-install
+```
+
+Or to completely wipe legacy databases and re-initialize MCP configs in one go:
+
+```powershell
+autopoiesis clean; autopoiesis init
+```
 
 ---
 
@@ -13,9 +29,10 @@ If your AI Agent in Kilocode or VS Code says:
 The IDE spawns `autopoiesis serve --mode stdio` as a background child process. If you updated python packages, changed virtual environment files, or closed a terminal session, the IDE's child stdio connection may have timed out or closed.
 
 ### ⚡ The 2-Second Fix:
-1. In Kilocode or VS Code, press **`Ctrl+Shift+P`** (or `Cmd+Shift+P` on Mac).
-2. Type **`Developer: Reload Window`** and press **Enter**.
-3. When the window reloads, Kilocode / VS Code immediately re-spawns `autopoiesis serve --mode stdio` and re-establishes the green MCP connection!
+1. Run `autopoiesis mcp-install` in your terminal.
+2. In Kilocode or VS Code, press **`Ctrl+Shift+P`** (or `Cmd+Shift+P` on Mac).
+3. Type **`Developer: Reload Window`** and press **Enter**.
+4. When the window reloads, Kilocode / VS Code immediately re-spawns `autopoiesis serve --mode stdio` using the updated binary path and re-establishes the green MCP connection!
 
 ---
 
@@ -36,7 +53,7 @@ If you want a persistent daemon that stays running 24/7 in the background withou
 ### Q1: Is `"command": "autopoiesis"` in `.vscode/mcp.json` correct?
 **YES!** `"command": "autopoiesis"` is valid if `autopoiesis.exe` is installed in system PATH or activated in your virtual environment.
 
-When you run `autopoiesis init` or `.\install.ps1`, the engine automatically updates `mcp.json` to use the **absolute path to your virtual environment binary** (e.g. `D:\Project\.venv\Scripts\autopoiesis.exe`). This guarantees that VS Code and Kilocode can spawn the engine even if `.venv` is not active in your global shell!
+When you run `autopoiesis init`, `autopoiesis mcp-install`, or `.\install.ps1`, the engine automatically updates `mcp.json` to use the **absolute path to your virtual environment binary** (e.g. `D:\Project\.venv\Scripts\autopoiesis.exe`). This guarantees that VS Code and Kilocode can spawn the engine even if `.venv` is not active in your global shell!
 
 ---
 
