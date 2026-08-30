@@ -1,5 +1,6 @@
 import sys
 import json
+import shutil
 from pathlib import Path
 from typing import Dict, Any
 
@@ -26,7 +27,19 @@ def get_client_config_paths() -> Dict[str, Path]:
     return paths
 
 
-def update_mcp_config_file(config_path: Path, server_cmd: str = "autopoiesis") -> bool:
+def resolve_autopoiesis_command() -> tuple[str, list[str]]:
+    """Resolves the absolute path command and arguments for spawning the autopoiesis MCP server."""
+    # Check if autopoiesis executable exists in PATH or current virtualenv
+    autopoiesis_bin = shutil.which("autopoiesis")
+    if autopoiesis_bin:
+        return str(Path(autopoiesis_bin).resolve()), ["serve", "--mode", "stdio"]
+
+    # Fallback to python executable module invocation
+    python_bin = sys.executable
+    return str(Path(python_bin).resolve()), ["-m", "autopoiesis.cli.main", "serve", "--mode", "stdio"]
+
+
+def update_mcp_config_file(config_path: Path) -> bool:
     """Injects or updates the autopoiesis-engine entry in an mcp.json or claude_desktop_config.json file."""
     config_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -40,9 +53,11 @@ def update_mcp_config_file(config_path: Path, server_cmd: str = "autopoiesis") -
     if "mcpServers" not in data or not isinstance(data["mcpServers"], dict):
         data["mcpServers"] = {}
 
+    cmd, args = resolve_autopoiesis_command()
+
     data["mcpServers"]["autopoiesis-engine"] = {
-        "command": server_cmd,
-        "args": ["serve", "--mode", "stdio"],
+        "command": cmd,
+        "args": args,
         "env": {
             "AUTOPOIESIS_ENV": "development"
         }

@@ -1,6 +1,36 @@
 # Setup Guide: How AI Agents Connect & Execute Tools
 
-This guide explains **how AI Coding Agents** (in Kilocode, VS Code, Cursor, or Claude Desktop) discover, call, and execute micro-skills from the Autopoiesis Engine using the **Model Context Protocol (MCP)**, and **how to view active agents and logs** in the **Global Real-Time Dashboard UI**.
+This guide explains **how AI Coding Agents** (in Kilocode, VS Code, Cursor, or Claude Desktop) discover, call, and execute micro-skills from the Autopoiesis Engine using the **Model Context Protocol (MCP)**, and **how to troubleshoot and verify** that execution is connected.
+
+---
+
+## 🔧 Troubleshooting Kilocode "Unavailable Tool" / Connection Error
+
+If Kilocode displays `unavailable tool` or `failed to connect to server`:
+
+### 1. Verify `mcp.json` Absolute Binary Path
+`autopoiesis init` resolves the absolute path to your Python virtual environment binary.
+Check `.kilocode/mcp.json` or `.vscode/mcp.json` in your project folder:
+
+```json
+{
+  "mcpServers": {
+    "autopoiesis-engine": {
+      "command": "D:\\Autopoiesis-Engine\\.venv\\Scripts\\autopoiesis.exe",
+      "args": ["serve", "--mode", "stdio"],
+      "env": {
+        "AUTOPOIESIS_ENV": "development"
+      }
+    }
+  }
+}
+```
+
+### 2. Reload Kilocode / VS Code Window
+If you installed or ran `autopoiesis init` while Kilocode was open:
+- Press **`Ctrl+Shift+P`** (or `Cmd+Shift+P` on Mac).
+- Select **`Developer: Reload Window`** to force Kilocode to reload the MCP stdio connection.
+- After reload, Kilocode will launch `autopoiesis serve --mode stdio` automatically!
 
 ---
 
