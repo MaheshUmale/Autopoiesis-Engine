@@ -1,9 +1,41 @@
 import argparse
 import sys
+import shutil
+from pathlib import Path
 import uvicorn
 
 from autopoiesis.cli.init import init_workspace
 from autopoiesis.mcp.server import run_mcp_stdio_server, create_fastapi_app
+from autopoiesis.core.platform import PlatformAdapter
+
+
+def clean_workspace(target_path: str = ".") -> None:
+    """Purges runtime state (.autopoiesis), workspace registry files, and mcp configs."""
+    root = PlatformAdapter.sanitize_path(target_path)
+    print(f"Cleaning workspace at {root}...")
+
+    base_dir = root / ".autopoiesis"
+    registry_dir = root / "registry"
+    mcp_file = root / "mcp.json"
+    rules_file = root / ".cursorrules"
+
+    if base_dir.exists():
+        shutil.rmtree(base_dir, ignore_errors=True)
+        print("Purged .autopoiesis/ runtime directory.")
+
+    if registry_dir.exists():
+        shutil.rmtree(registry_dir, ignore_errors=True)
+        print("Purged registry/ workspace directory.")
+
+    if mcp_file.exists():
+        mcp_file.unlink(missing_ok=True)
+        print("Removed mcp.json file.")
+
+    if rules_file.exists():
+        rules_file.unlink(missing_ok=True)
+        print("Removed .cursorrules file.")
+
+    print("Workspace clean completed.")
 
 
 def main():
@@ -13,6 +45,10 @@ def main():
     # init command
     init_parser = subparsers.add_parser("init", help="Initialize workspace and IDE MCP configurations.")
     init_parser.add_argument("--path", default=".", help="Project path to initialize.")
+
+    # clean command
+    clean_parser = subparsers.add_parser("clean", help="Purge runtime state (.autopoiesis) and legacy workspace files.")
+    clean_parser.add_argument("--path", default=".", help="Project path to clean.")
 
     # serve command
     serve_parser = subparsers.add_parser("serve", help="Run the MCP server daemon.")
@@ -27,6 +63,8 @@ def main():
         print(f"Workspace initialized successfully at {res['workspace_root']}")
         print(f"Configured MCP clients: {', '.join(res['configured_clients'])}")
         print(f"Generated MCP config: {res['mcp_config_path']}")
+    elif args.command == "clean":
+        clean_workspace(args.path)
     elif args.command == "serve":
         if args.mode == "stdio":
             import asyncio

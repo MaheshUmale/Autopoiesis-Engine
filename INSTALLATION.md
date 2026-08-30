@@ -1,6 +1,6 @@
 # Installation Guide: Autopoiesis-Engine
 
-This guide covers step-by-step installation instructions for `autopoiesis-engine` across Windows, Linux, and macOS.
+This guide covers step-by-step installation, uninstallation, and reinstallation instructions for `autopoiesis-engine` across Windows, Linux, and macOS.
 
 ---
 
@@ -33,6 +33,46 @@ pipx install git+https://github.com/autopoiesis/autopoiesis-engine.git
 Then initialize your workspace in your project directory:
 ```powershell
 autopoiesis init
+```
+
+---
+
+## 🔄 Reinstalling / Upgrading (Clearing Legacy Files & Database)
+
+If you have updated directory structures or upgraded versions and want to purge older databases and legacy files before re-installing:
+
+### Windows PowerShell (Automated Reinstall):
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force; .\reinstall.ps1
+```
+
+### Linux / macOS (Automated Reinstall):
+```bash
+chmod +x reinstall.sh && ./reinstall.sh
+```
+
+---
+
+## 🗑️ Uninstallation Script & CLI Clean Command
+
+### Option A: Clean Workspace via CLI (`autopoiesis clean`)
+Purges local `.autopoiesis/` database runtime state, `registry/` directories, `mcp.json`, and `.cursorrules`:
+
+```powershell
+autopoiesis clean
+```
+
+### Option B: Complete Uninstallation Scripts
+Removes the package, stops daemon processes, and purges workspace state:
+
+#### Windows PowerShell:
+```powershell
+.\uninstall.ps1
+```
+
+#### Linux / macOS:
+```bash
+chmod +x uninstall.sh && ./uninstall.sh
 ```
 
 ---
@@ -116,12 +156,13 @@ autopoiesis --help
 
 Output:
 ```
-usage: autopoiesis [-h] {init,serve} ...
+usage: autopoiesis [-h] {init,clean,serve} ...
 
 Autopoiesis Engine CLI Tool
 
 positional arguments:
-  {init,serve}
+  {init,clean,serve}
     init        Initialize workspace and IDE MCP configurations.
+    clean       Purge runtime state (.autopoiesis) and legacy workspace files.
     serve       Run the MCP server daemon.
 ```
