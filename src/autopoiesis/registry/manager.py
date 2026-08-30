@@ -311,16 +311,12 @@ class RegistryManager:
         effective_namespaces = list(set((active_namespaces or []) + ["global"]))
 
         # Build filter for namespace IN effective_namespaces
-        must_conditions = [
-            Filter(
-                should=[
-                    FieldCondition(key="namespace", match=MatchValue(value=ns))
-                    for ns in effective_namespaces
-                ]
-            )
-        ]
-
-        query_filter = Filter(must=must_conditions) if must_conditions else None
+        query_filter = Filter(
+            should=[
+                FieldCondition(key="namespace", match=MatchValue(value=ns))
+                for ns in effective_namespaces
+            ]
+        )
 
         if hasattr(self.qdrant, "query_points"):
             results = self.qdrant.query_points(

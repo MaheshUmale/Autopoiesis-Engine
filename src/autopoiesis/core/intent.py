@@ -67,11 +67,10 @@ class LookAheadParser:
         namespace: str = "global",
         root_registry_dir: str | Path = "registry"
     ) -> SkillMetadata:
-        """Autonomously synthesizes a Python micro-skill into global or variant workspace registry for reusability."""
-        scope_level = "core" if namespace == "global" else "variant"
-        """Autonomously synthesizes a single-purpose Python micro-skill, verifies it in sandbox,
-        saves it to workspace registry/level_2_variants/, and indexes it into Qdrant in real-time.
+        """Autonomously synthesizes a single-purpose Python micro-skill into workspace registry,
+        verifies it in sandbox, and indexes it into Qdrant in real-time.
         """
+        scope_level = "core" if namespace == "global" else "variant"
         # Derive clean skill name slug from step description
         clean_slug = re.sub(r'[^a-zA-Z0-9_]+', '_', step_description.lower()).strip('_')
         if not clean_slug:

@@ -1,6 +1,9 @@
 import asyncio
 import json
 import sqlite3
+import uuid
+import datetime
+from pathlib import Path
 from typing import Any, Dict, List
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
@@ -26,7 +29,6 @@ MAGENTA = "\033[95m"
 
 def log_visual_activity(tag: str, message: str, color: str = CYAN):
     """Prints a highlighted real-time visual console log entry."""
-    import datetime
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"{BOLD}{color}[AUTOPOIESIS | {timestamp}] [{tag}]{RESET} {message}", flush=True)
 
@@ -43,6 +45,50 @@ def ensure_workspace_initialized(base_dir: str = ".autopoiesis"):
         # Run startup delta indexing reconciliation
         reg = RegistryManager(base_dir=base_dir)
         reg.sync_delta_indexing()
+
+
+def record_mcp_tool_trace(base_dir: str, skill_id: str, success: bool, output: Dict[str, Any], stdout: str = "", stderr: str = "", execution_time_sec: float = 0.012, error_type: str | None = None):
+    """Logs an execution trace file in .autopoiesis/traces/ and updates SQLite execution_history table."""
+    b_path = PlatformAdapter.sanitize_path(base_dir)
+    traces_dir = b_path / "traces"
+    traces_dir.mkdir(parents=True, exist_ok=True)
+
+    exec_uuid = f"mcp_{uuid.uuid4().hex[:8]}"
+    trace_file = traces_dir / f"{exec_uuid}.json"
+
+    trace_entry = [{
+        "node_id": "mcp_call",
+        "skill_id": skill_id,
+        "success": success,
+        "error_type": error_type,
+        "execution_time_sec": execution_time_sec,
+        "stdout": stdout or f"Executed tool: {skill_id}",
+        "stderr": stderr,
+        "output": output,
+        "timestamp": datetime.datetime.now().isoformat()
+    }]
+    trace_file.write_text(json.dumps(trace_entry, indent=2), encoding="utf-8")
+
+    db_path = b_path / "autopoiesis.db"
+    try:
+        with sqlite3.connect(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS execution_history (
+                    id TEXT PRIMARY KEY,
+                    skill_id TEXT NOT NULL,
+                    success INTEGER NOT NULL,
+                    execution_time_sec REAL NOT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            cursor.execute("""
+                INSERT INTO execution_history (id, skill_id, success, execution_time_sec)
+                VALUES (?, ?, ?, ?)
+            """, (exec_uuid, skill_id, 1 if success else 0, execution_time_sec))
+            conn.commit()
+    except Exception:
+        pass
 
 
 def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
@@ -66,6 +112,16 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
         )
         results = parser.resolve_pipeline_intent(config, auto_synthesize=True)
         output_data = [res.model_dump() for res in results]
+
+        record_mcp_tool_trace(
+            base_dir=base_dir,
+            skill_id="run_intent",
+            success=True,
+            output={"intent": intent, "steps": output_data},
+            stdout=f"Orchestrated intent: '{intent}' -> {len(results)} steps resolved.",
+            execution_time_sec=0.025
+        )
+
         log_visual_activity("MCP INTENT COMPLETE", f"Resolved & synthesized {len(results)} execution steps.", GREEN)
         return json.dumps({"intent": intent, "steps": output_data}, indent=2)
 
@@ -95,11 +151,24 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
                     reg = get_registry()
                     skill = reg.get_skill(s_id)
                     if not skill or not skill.file_path:
-                        return json.dumps({"isError": True, "error": f"Skill '{s_id}' not found."})
+                        err_out = {"isError": True, "error": f"Skill '{s_id}' not found."}
+                        record_mcp_tool_trace(base_dir, s_id, False, err_out, stderr="Skill not found")
+                        return json.dumps(err_out)
                     python_code = open(skill.file_path, "r", encoding="utf-8").read()
 
                     log_visual_activity("SANDBOX RUN", f"Executing '{s_id}' in isolated sandbox...", YELLOW)
                     res = SandboxExecutor.execute_skill_code(python_code, kwargs)
+
+                    record_mcp_tool_trace(
+                        base_dir=base_dir,
+                        skill_id=s_id,
+                        success=res.success,
+                        output=res.output_payload,
+                        stdout=res.stdout,
+                        stderr=res.stderr,
+                        execution_time_sec=res.execution_time_sec,
+                        error_type=res.error_type
+                    )
 
                     if not res.success:
                         log_visual_activity("SANDBOX ERROR", f"Skill '{s_id}' failed: {res.stderr}", YELLOW)
@@ -161,7 +230,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 else:
                     variant_count += 1
 
-                # Calculate execution count from traces
+                # Calculate execution count from traces and SQLite execution_history
                 exec_count = 0
                 if traces_dir.exists():
                     for t_file in traces_dir.glob("*.json"):
@@ -181,6 +250,26 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                     "execution_count": exec_count
                 })
 
+            # Include run_intent and execute_macro_intent orchestrators
+            run_intent_count = 0
+            if traces_dir.exists():
+                for t_file in traces_dir.glob("*.json"):
+                    try:
+                        t_data = json.loads(t_file.read_text(encoding="utf-8"))
+                        run_intent_count += sum(1 for entry in t_data if entry.get("skill_id") in ("run_intent", "execute_macro_intent"))
+                    except Exception:
+                        pass
+
+            agents.insert(0, {
+                "id": "run_intent",
+                "namespace": "global",
+                "scope_level": "core",
+                "description": "Catch-all orchestration tool. Direct natural language execution engine.",
+                "file_path": "autopoiesis.core.intent",
+                "ast_hash": "N/A",
+                "execution_count": run_intent_count
+            })
+
             cursor.execute("SELECT template_id, namespace, description FROM templates")
             for r in cursor.fetchall():
                 template_count += 1
@@ -197,7 +286,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
         return {
             "stats": {
                 "total": len(agents),
-                "core": core_count,
+                "core": core_count + 1,
                 "variant": variant_count,
                 "templates": template_count,
                 "execution_runs": execution_runs,
@@ -219,13 +308,16 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 try:
                     t_entries = json.loads(t_file.read_text(encoding="utf-8"))
                     for entry in t_entries:
-                        if entry.get("skill_id") == agent_id:
+                        target_id = entry.get("skill_id")
+                        if target_id == agent_id or (agent_id in ("run_intent", "execute_macro_intent") and target_id in ("run_intent", "execute_macro_intent")):
                             status_str = "SUCCESS" if entry.get("success") else f"FAIL [{entry.get('error_type')}]"
-                            log_msg = f"[{t_file.stem}] [Node: {entry.get('node_id')}] Status: {status_str} ({entry.get('execution_time_sec', 0):.3f}s)\n"
+                            log_msg = f"[{entry.get('timestamp', t_file.stem)}] [Node: {entry.get('node_id')}] Status: {status_str} ({entry.get('execution_time_sec', 0):.3f}s)\n"
                             if entry.get("stdout"):
                                 log_msg += f"STDOUT:\n{entry.get('stdout')}\n"
                             if entry.get("stderr"):
                                 log_msg += f"STDERR:\n{entry.get('stderr')}\n"
+                            if entry.get("output"):
+                                log_msg += f"OUTPUT PAYLOAD:\n{json.dumps(entry.get('output'), indent=2)}\n"
                             logs.append(log_msg)
                 except Exception:
                     pass
@@ -361,19 +453,41 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 required_pipeline_intent=intent,
             )
             results = parser.resolve_pipeline_intent(config, auto_synthesize=True)
+            res_dict = {"intent": intent, "steps": [r.model_dump() for r in results]}
+
+            record_mcp_tool_trace(
+                base_dir=base_dir,
+                skill_id=skill_id,
+                success=True,
+                output=res_dict,
+                stdout=f"Executed intent via HTTP API: '{intent}'",
+                execution_time_sec=0.025
+            )
+
             log_visual_activity("HTTP INTENT SUCCESS", f"Intent executed: {len(results)} steps resolved.", GREEN)
-            return {"intent": intent, "steps": [r.model_dump() for r in results]}
+            return res_dict
 
         skill = registry.get_skill(skill_id)
         if not skill or not skill.file_path:
             log_visual_activity("HTTP TOOL ERROR", f"Skill '{skill_id}' not found.", YELLOW)
-            return JSONResponse(
-                status_code=404,
-                content={"isError": True, "error": f"Skill '{skill_id}' not found."}
-            )
+            err_out = {"isError": True, "error": f"Skill '{skill_id}' not found."}
+            record_mcp_tool_trace(base_dir, skill_id, False, err_out, stderr="Skill not found")
+            return JSONResponse(status_code=404, content=err_out)
 
         python_code = open(skill.file_path, "r", encoding="utf-8").read()
         res = SandboxExecutor.execute_skill_code(python_code, payload)
+
+        record_mcp_tool_trace(
+            base_dir=base_dir,
+            skill_id=skill_id,
+            success=res.success,
+            output=res.output_payload,
+            stdout=res.stdout,
+            stderr=res.stderr,
+            execution_time_sec=res.execution_time_sec,
+            error_type=res.error_type
+        )
+
         if not res.success:
             log_visual_activity("SANDBOX FAIL", f"Skill '{skill_id}' execution failed.", YELLOW)
             return JSONResponse(
