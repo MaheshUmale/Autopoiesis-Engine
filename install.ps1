@@ -65,9 +65,9 @@ if (Test-Path $autopoiesisExe) {
 Write-Host "`n==========================================================" -ForegroundColor Green
 Write-Host "          Installation & Setup Completed Successfully!    " -ForegroundColor Green
 Write-Host "==========================================================" -ForegroundColor Green
-Write-Host "To activate the virtual environment in PowerShell:" -ForegroundColor White
-Write-Host "  .\.venv\Scripts\Activate.ps1`n" -ForegroundColor Cyan
-Write-Host "To start the MCP Server Daemon in stdio mode (for Claude Desktop / Cursor / VS Code / Kilocode):" -ForegroundColor White
-Write-Host "  autopoiesis serve --mode stdio`n" -ForegroundColor Cyan
-Write-Host "To start the MCP Server Daemon in HTTP mode:" -ForegroundColor White
-Write-Host "  autopoiesis serve --mode http --host 127.0.0.1 --port 8000`n" -ForegroundColor Cyan
+Write-Host "NOTE: Your IDE (Kilocode / Cursor / VS Code / Claude) will automatically" -ForegroundColor Cyan
+Write-Host "start and connect to the Autopoiesis MCP Server in the background!" -ForegroundColor Cyan
+Write-Host "You do NOT need to run any manual server commands.`n" -ForegroundColor Cyan
+Write-Host "To open the interactive Web Dashboard UI & Monitor Logs in browser:" -ForegroundColor White
+Write-Host "  autopoiesis serve --mode http --host 127.0.0.1 --port 8000" -ForegroundColor Yellow
+Write-Host "  Then open: http://127.0.0.1:8000/ui`n" -ForegroundColor Yellow

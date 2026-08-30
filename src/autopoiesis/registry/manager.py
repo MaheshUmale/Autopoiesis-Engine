@@ -15,12 +15,16 @@ from autopoiesis.core.platform import PlatformAdapter
 
 def _cleanup_qdrant_instances():
     """Explicitly closes all active QdrantClient instances prior to interpreter shutdown."""
-    for client in list(RegistryManager._qdrant_instances.values()):
-        try:
-            client.close()
-        except Exception:
-            pass
-    RegistryManager._qdrant_instances.clear()
+    try:
+        if hasattr(RegistryManager, "_qdrant_instances"):
+            for client in list(RegistryManager._qdrant_instances.values()):
+                try:
+                    client.close()
+                except Exception:
+                    pass
+            RegistryManager._qdrant_instances.clear()
+    except Exception:
+        pass
 
 
 atexit.register(_cleanup_qdrant_instances)

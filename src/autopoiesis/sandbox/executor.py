@@ -1,6 +1,7 @@
 import json
 import sys
 import tempfile
+import subprocess
 from pathlib import Path
 from typing import Any, Dict
 from pydantic import BaseModel
@@ -127,7 +128,7 @@ if __name__ == "__main__":
 
             try:
                 proc = PlatformAdapter.run_command(
-                    f"{sys.executable} runner.py",
+                    f'"{sys.executable}" runner.py',
                     cwd=temp_path,
                     timeout=timeout,
                 )
