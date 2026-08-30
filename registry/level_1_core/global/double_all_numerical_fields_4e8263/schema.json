@@ -1,0 +1,24 @@
+{
+  "id": "global.double_all_numerical_fields_4e8263",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Autonomously synthesized micro-skill: double all numerical fields",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "payload": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "output": {}
+    }
+  },
+  "ast_hash": "329c310ec5b23e8e67ff1455eb70088efe50ec98b668cec242502faf4caf3568",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/double_all_numerical_fields_4e8263/skill.py"
+}

@@ -79,16 +79,68 @@ class LookAheadParser:
         slug_hash = hashlib.md5(step_description.encode("utf-8")).hexdigest()[:6]
         skill_id = f"{namespace}.{clean_slug}_{slug_hash}"
 
-        # Synthesize production-ready Python micro-skill code
-        generated_code = f"""def main(inputs: dict) -> dict:
+        # Synthesize functional Python micro-skill code tailored to step action intent
+        step_lower = step_description.lower()
+
+        # Detect target file paths in step description if present
+        path_match = re.search(r'(?:[a-zA-Z]:\\|/|\./)[\w\.-]+(?:\\[\w\.-]+|/[\w\.-]+)*', step_description)
+        extracted_path = path_match.group(0) if path_match else None
+
+        if "parse" in step_lower or "read" in step_lower or "load" in step_lower:
+            target_file = extracted_path or "input.json"
+            generated_code = f"""import json, os
+
+def main(inputs: dict) -> dict:
     \"\"\"Autonomously synthesized micro-skill for: {step_description}\"\"\"
-    action_text = "{step_description}"
+    file_path = inputs.get("file_path", r"{target_file}")
+    if not os.path.exists(file_path):
+        payload = inputs.get("payload", inputs)
+        if isinstance(payload, dict) and "data" in payload:
+            return {{"status": "success", "data": payload["data"], "file_path": file_path}}
+        return {{"status": "error", "error": f"File not found: {{file_path}}"}}
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+    return {{"status": "success", "data": data, "file_path": file_path}}
+"""
+        elif "double" in step_lower or "multiply" in step_lower or "modify" in step_lower or "transform" in step_lower:
+            generated_code = f"""def _double_values(obj):
+    if isinstance(obj, (int, float)) and not isinstance(obj, bool):
+        return obj * 2
+    elif isinstance(obj, dict):
+        return {{k: _double_values(v) for k, v in obj.items()}}
+    elif isinstance(obj, list):
+        return [_double_values(item) for item in obj]
+    return obj
+
+def main(inputs: dict) -> dict:
+    \"\"\"Autonomously synthesized micro-skill for: {step_description}\"\"\"
+    raw_data = inputs.get("data", inputs.get("payload", inputs))
+    doubled = _double_values(raw_data)
+    return {{"status": "success", "data": doubled, "output": doubled}}
+"""
+        elif "save" in step_lower or "write" in step_lower or "dump" in step_lower or "store" in step_lower:
+            target_file = extracted_path or "result.json"
+            generated_code = f"""import json, os
+
+def main(inputs: dict) -> dict:
+    \"\"\"Autonomously synthesized micro-skill for: {step_description}\"\"\"
+    file_path = inputs.get("file_path", r"{target_file}")
+    data_to_save = inputs.get("data", inputs.get("output", inputs.get("payload", inputs)))
+    os.makedirs(os.path.dirname(os.path.abspath(file_path)) or '.', exist_ok=True)
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data_to_save, f, indent=2)
+    return {{"status": "success", "saved_to": file_path, "data": data_to_save}}
+"""
+        else:
+            generated_code = f"""def main(inputs: dict) -> dict:
+    \"\"\"Autonomously synthesized micro-skill for: {step_description}\"\"\"
+    action_text = r"{step_description}"
     payload = inputs.get("payload", inputs)
     return {{
         "status": "success",
         "action": action_text,
         "input_processed": payload,
-        "output": f"Executed: {{action_text}}"
+        "output": payload
     }}
 """
 

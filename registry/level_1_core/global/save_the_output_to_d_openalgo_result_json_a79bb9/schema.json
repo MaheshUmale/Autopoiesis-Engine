@@ -1,0 +1,24 @@
+{
+  "id": "global.save_the_output_to_d_openalgo_result_json_a79bb9",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Autonomously synthesized micro-skill: save the output to D:\\OpenALGO\\result.json",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "payload": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "output": {}
+    }
+  },
+  "ast_hash": "36d9cac46ed58c54a4c0a866863c651562ee727c3f1d91e1222189ad90b293a4",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/save_the_output_to_d_openalgo_result_json_a79bb9/skill.py"
+}
