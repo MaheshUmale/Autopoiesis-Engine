@@ -1,6 +1,6 @@
 # User Manual: Autopoiesis-Engine
 
-Welcome to the **Autopoiesis Engine User Manual**. This document covers operating the CLI, managing skills in the 3-Tier Registry, executing DAG workflows, and utilizing sandbox execution.
+Welcome to the **Autopoiesis Engine User Manual**. This document covers operating the CLI, managing skills in the 3-Tier Registry, executing DAG workflows, and enabling AI Coding Agents (Kilocode, VS Code, Cursor, Claude) to execute synthesized tools.
 
 ---
 
@@ -14,25 +14,41 @@ Initializes a project directory for Autopoiesis Engine execution.
 autopoiesis init [--path /path/to/project]
 ```
 
+This sets up:
+- `.autopoiesis/` local state storage (SQLite database, Qdrant vector storage, Parquet staging files).
+- `registry/` folder structure (`level_1_core`, `level_2_variants`, `level_3_templates`).
+- MCP configuration files for Kilocode (`.kilocode/mcp.json`), VS Code (`.vscode/mcp.json`), Cursor (`.cursor/mcp.json`), and Claude Desktop.
+
 ---
 
 ### `autopoiesis serve`
 
-Launches the MCP Server router.
+Launches the MCP Server daemon.
 
-- **stdio mode (Default for IDEs):**
+- **stdio mode (Default for IDEs & Agents):**
   ```bash
   autopoiesis serve --mode stdio
   ```
 
-- **HTTP/SSE mode (Background Daemon):**
+- **HTTP/SSE mode (Background Daemon for Web & Remote Services):**
   ```bash
   autopoiesis serve --mode http --host 127.0.0.1 --port 8000
   ```
 
 ---
 
-## 2. The 3-Tier Registry Architecture
+## 2. How AI Agents (Kilocode / VS Code / Cursor) Execute Tools
+
+1. Your IDE (Kilocode, VS Code, Cursor) starts and reads its MCP configuration file (`.kilocode/mcp.json` or `.vscode/mcp.json`).
+2. The IDE launches `autopoiesis serve --mode stdio` in the background.
+3. When you prompt your AI Agent in Kilocode or VS Code:
+   > *"Parse JSON data from payload.json and double the value field"*
+4. The AI Agent inspects the available tools provided by the Autopoiesis Engine, formats a tool call request, and passes it to the engine over standard MCP stdio.
+5. The Autopoiesis Engine executes the code in a sandboxed subprocess and returns the result back to the AI Agent.
+
+---
+
+## 3. The 3-Tier Registry Architecture
 
 The framework organizes skills and workflows into three tiers:
 
@@ -42,7 +58,7 @@ The framework organizes skills and workflows into three tiers:
 
 ---
 
-## 3. Writing Micro-Skills
+## 4. Writing Micro-Skills
 
 Every micro-skill is a standalone Python script defining a `main(inputs: dict) -> dict` entry point.
 
@@ -81,7 +97,7 @@ def main(inputs: dict) -> dict:
 
 ---
 
-## 4. Sandbox Execution & State Thresholding
+## 5. Sandbox Execution & State Thresholding
 
 - **Dynamic Timeout Scaling:**
   Executing micro-skills in the sandbox scales timeout automatically based on input size:
@@ -93,7 +109,7 @@ def main(inputs: dict) -> dict:
 
 ---
 
-## 5. Temporal DAG Workflows & Self-Healing
+## 6. Temporal DAG Workflows & Self-Healing
 
 - Workflows execute deterministically using `AutopoiesisDAGWorkflow`.
 - If a skill fails due to logic errors or syntax issues, failure routes to `SelfHealingWorkflow`.
