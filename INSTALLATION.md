@@ -7,7 +7,9 @@ This guide covers installing `autopoiesis-engine` across Linux, macOS, and Windo
 ## Prerequisites
 
 - **Python:** `>= 3.11`
-- **System Shell:** `/bin/bash` (Linux/macOS) or `PowerShell / pwsh` (Windows)
+- **System Shell:**
+  - Linux / macOS: `/bin/bash` or `/bin/zsh`
+  - Windows: PowerShell (`pwsh` or `powershell.exe`) or Command Prompt (`cmd.exe`)
 - **Temporal Server (Optional):** Required for production distributed workflow orchestration (`temporal server start-dev`).
 
 ---
@@ -21,12 +23,27 @@ Clone the repository and install in editable mode:
 ```bash
 git clone https://github.com/autopoiesis/autopoiesis-engine.git
 cd autopoiesis-engine
+```
 
-# Create virtual environment
+#### Linux / macOS:
+```bash
 python3 -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+source .venv/bin/activate
+pip install -e ".[dev]"
+```
 
-# Install package with development dependencies
+#### Windows (PowerShell):
+```powershell
+python -m venv .venv
+# If script execution is restricted, run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev]"
+```
+
+#### Windows (Command Prompt - `cmd.exe`):
+```cmd
+python -m venv .venv
+.\.venv\Scripts\activate.bat
 pip install -e ".[dev]"
 ```
 
@@ -34,7 +51,7 @@ pip install -e ".[dev]"
 
 ### Method 2: Global Installation via `pipx` / `uv`
 
-Install `autopoiesis-engine` as an isolated global CLI command:
+Install `autopoiesis-engine` as an isolated global CLI tool:
 
 ```bash
 # Using pipx
