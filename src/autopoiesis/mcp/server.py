@@ -11,6 +11,7 @@ import mcp.types as types
 
 from autopoiesis.registry.manager import RegistryManager
 from autopoiesis.sandbox.executor import SandboxExecutor
+from autopoiesis.core.intent import LookAheadParser, ProjectConfig
 
 
 def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
@@ -19,6 +20,25 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
 
     def get_registry():
         return RegistryManager(base_dir=base_dir)
+
+    # Register primary project orchestrator tool: execute_macro_intent
+    async def execute_macro_intent_handler(intent: str, active_namespaces: List[str] = None) -> str:
+        reg = get_registry()
+        parser = LookAheadParser(reg)
+        config = ProjectConfig(
+            project_id="mcp_intent_exec",
+            active_namespaces=active_namespaces or ["global"],
+            required_pipeline_intent=intent,
+        )
+        results = parser.resolve_pipeline_intent(config)
+        output_data = [res.model_dump() for res in results]
+        return json.dumps({"intent": intent, "steps": output_data}, indent=2)
+
+    app_server.add_tool(
+        fn=execute_macro_intent_handler,
+        name="execute_macro_intent",
+        description="Primary project orchestrator tool for end-to-end intent processing and resolution.",
+    )
 
     registry = get_registry()
     with sqlite3.connect(registry.db_path) as conn:
@@ -77,25 +97,53 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
     @app.get("/tools")
     async def list_tools():
         registry = RegistryManager(base_dir=base_dir)
+        tools = [
+            {
+                "id": "execute_macro_intent",
+                "namespace": "global",
+                "scope_level": "core",
+                "description": "Primary project orchestrator tool for end-to-end intent processing and resolution.",
+                "inputs": {
+                    "type": "object",
+                    "properties": {
+                        "intent": {"type": "string"},
+                        "active_namespaces": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["intent"]
+                }
+            }
+        ]
         with sqlite3.connect(registry.db_path) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT id, namespace, scope_level, description, inputs_json FROM skills")
             rows = cursor.fetchall()
-            return [
-                {
+            for r in rows:
+                tools.append({
                     "id": r[0],
                     "namespace": r[1],
                     "scope_level": r[2],
                     "description": r[3],
                     "inputs": json.loads(r[4])
-                }
-                for r in rows
-            ]
+                })
+        return tools
 
     @app.post("/tools/{skill_id:path}/execute")
     async def execute_tool(skill_id: str, request: Request):
         registry = RegistryManager(base_dir=base_dir)
         payload = await request.json()
+
+        if skill_id == "execute_macro_intent":
+            intent = payload.get("intent", "")
+            active_namespaces = payload.get("active_namespaces", ["global"])
+            parser = LookAheadParser(registry)
+            config = ProjectConfig(
+                project_id="http_intent_exec",
+                active_namespaces=active_namespaces,
+                required_pipeline_intent=intent,
+            )
+            results = parser.resolve_pipeline_intent(config)
+            return {"intent": intent, "steps": [r.model_dump() for r in results]}
+
         skill = registry.get_skill(skill_id)
         if not skill or not skill.file_path:
             return JSONResponse(
@@ -142,18 +190,23 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
 
         if method == "tools/list":
             registry = RegistryManager(base_dir=base_dir)
+            tools = [
+                {
+                    "name": "execute_macro_intent",
+                    "description": "Primary project orchestrator tool for end-to-end intent processing.",
+                    "inputSchema": {"type": "object", "properties": {"intent": {"type": "string"}}, "required": ["intent"]}
+                }
+            ]
             with sqlite3.connect(registry.db_path) as conn:
                 cursor = conn.cursor()
                 cursor.execute("SELECT id, description, inputs_json FROM skills")
                 rows = cursor.fetchall()
-                tools = [
-                    {
+                for r in rows:
+                    tools.append({
                         "name": r[0],
                         "description": r[1],
                         "inputSchema": json.loads(r[2])
-                    }
-                    for r in rows
-                ]
+                    })
             return {"jsonrpc": "2.0", "id": msg_id, "result": {"tools": tools}}
 
         return {"jsonrpc": "2.0", "id": msg_id, "result": {}}
