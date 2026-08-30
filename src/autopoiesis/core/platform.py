@@ -13,7 +13,7 @@ class PlatformAdapter:
     def get_shell_command(cmd_string: str) -> list[str]:
         """Returns platform-specific shell execution command tokens."""
         if sys.platform == "win32":
-            return ["pwsh", "-NoProfile", "-NonInteractive", "-Command", cmd_string]
+            return ["pwsh", "-NoProfile", "-NonInteractive", "-Command", f"& {cmd_string}"]
         return ["/bin/bash", "-c", cmd_string]
 
     @staticmethod

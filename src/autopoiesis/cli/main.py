@@ -4,9 +4,28 @@ import shutil
 from pathlib import Path
 import uvicorn
 
-from autopoiesis.cli.init import init_workspace
+from autopoiesis.cli.init import init_workspace, update_mcp_config_file, get_client_config_paths, PlatformAdapter
 from autopoiesis.mcp.server import run_mcp_stdio_server, create_fastapi_app
-from autopoiesis.core.platform import PlatformAdapter
+
+
+def install_mcp_configs(target_path: str = ".") -> None:
+    """Forces generation and overwriting of MCP config files in workspace and client paths."""
+    root = PlatformAdapter.sanitize_path(target_path)
+    print(f"Installing/Updating MCP configurations for workspace at {root}...")
+
+    local_mcp_path = root / "mcp.json"
+    update_mcp_config_file(local_mcp_path)
+    print(f"Updated: {local_mcp_path}")
+
+    client_paths = get_client_config_paths()
+    for client, path in client_paths.items():
+        try:
+            update_mcp_config_file(path)
+            print(f"Updated {client} config: {path}")
+        except Exception as e:
+            print(f"Could not update {client} config ({path}): {e}")
+
+    print("MCP configuration update complete.")
 
 
 def clean_workspace(target_path: str = ".") -> None:
@@ -46,6 +65,10 @@ def main():
     init_parser = subparsers.add_parser("init", help="Initialize workspace and IDE MCP configurations.")
     init_parser.add_argument("--path", default=".", help="Project path to initialize.")
 
+    # mcp-install command
+    mcp_parser = subparsers.add_parser("mcp-install", help="Force overwrite MCP configuration files for IDEs.")
+    mcp_parser.add_argument("--path", default=".", help="Project path to update.")
+
     # clean command
     clean_parser = subparsers.add_parser("clean", help="Purge runtime state (.autopoiesis) and legacy workspace files.")
     clean_parser.add_argument("--path", default=".", help="Project path to clean.")
@@ -63,6 +86,8 @@ def main():
         print(f"Workspace initialized successfully at {res['workspace_root']}")
         print(f"Configured MCP clients: {', '.join(res['configured_clients'])}")
         print(f"Generated MCP config: {res['mcp_config_path']}")
+    elif args.command == "mcp-install":
+        install_mcp_configs(args.path)
     elif args.command == "clean":
         clean_workspace(args.path)
     elif args.command == "serve":

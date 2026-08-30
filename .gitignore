@@ -3,9 +3,12 @@ __pycache__/
 *.py[codz]
 *$py.class
 
-# Runtime state
+# Runtime state & Local IDE config
 .autopoiesis/
 mcp.json
+.vscode/mcp.json
+.cursor/mcp.json
+.kilocode/mcp.json
 
 # Environments
 .env
