@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sqlite3
+import datetime
 from typing import Any, Dict, List
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -12,10 +13,37 @@ import mcp.types as types
 from autopoiesis.registry.manager import RegistryManager
 from autopoiesis.sandbox.executor import SandboxExecutor
 from autopoiesis.core.intent import LookAheadParser, ProjectConfig
+from autopoiesis.cli.init import init_workspace
+
+# ANSI Color constants for visual terminal feedback
+RESET = "\033[0m"
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+BOLD = "\033[1m"
+MAGENTA = "\033[95m"
+
+
+def log_visual_activity(tag: str, message: str, color: str = CYAN):
+    """Prints a highlighted real-time visual console log entry."""
+    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
+    print(f"{BOLD}{color}[AUTOPOIESIS | {timestamp}] [{tag}]{RESET} {message}", flush=True)
+
+
+def ensure_workspace_initialized(base_dir: str = ".autopoiesis"):
+    """Automatically self-initializes the workspace if database or registry is missing."""
+    import os
+    db_file = os.path.join(base_dir, "autopoiesis.db")
+    if not os.path.exists(db_file):
+        log_visual_activity("AUTO-INIT", "Workspace not initialized. Auto-running self-initialization...", YELLOW)
+        init_workspace(".")
+        log_visual_activity("AUTO-INIT", "Workspace & seed database initialized successfully!", GREEN)
 
 
 def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
     """Creates and configures an MCP Server instance exposing Level 1 & Level 2 active micro-skills."""
+    ensure_workspace_initialized(base_dir)
+
     app_server = MCPServer("autopoiesis-mcp-server")
 
     def get_registry():
@@ -23,6 +51,7 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
 
     # Register primary project orchestrator tool: execute_macro_intent
     async def execute_macro_intent_handler(intent: str, active_namespaces: List[str] = None) -> str:
+        log_visual_activity("MCP AGENT ENGAGED", f"Executing macro intent: '{intent}'", MAGENTA)
         reg = get_registry()
         parser = LookAheadParser(reg)
         config = ProjectConfig(
@@ -32,6 +61,7 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
         )
         results = parser.resolve_pipeline_intent(config)
         output_data = [res.model_dump() for res in results]
+        log_visual_activity("MCP INTENT COMPLETE", f"Resolved {len(results)} execution steps.", GREEN)
         return json.dumps({"intent": intent, "steps": output_data}, indent=2)
 
     app_server.add_tool(
@@ -50,14 +80,21 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
 
             def make_handler(s_id: str):
                 async def skill_handler(**kwargs) -> str:
+                    log_visual_activity("TOOL CALL EXECUTED", f"AI Agent invoked tool: '{s_id}'", CYAN)
                     reg = get_registry()
                     skill = reg.get_skill(s_id)
                     if not skill or not skill.file_path:
                         return json.dumps({"isError": True, "error": f"Skill '{s_id}' not found."})
                     python_code = open(skill.file_path, "r", encoding="utf-8").read()
+
+                    log_visual_activity("SANDBOX RUN", f"Executing '{s_id}' in isolated sandbox...", YELLOW)
                     res = SandboxExecutor.execute_skill_code(python_code, kwargs)
+
                     if not res.success:
+                        log_visual_activity("SANDBOX ERROR", f"Skill '{s_id}' failed: {res.stderr}", YELLOW)
                         return json.dumps({"isError": True, "error_type": res.error_type, "stderr": res.stderr})
+
+                    log_visual_activity("SANDBOX SUCCESS", f"Skill '{s_id}' completed successfully in {res.execution_time_sec:.3f}s", GREEN)
                     return json.dumps(res.output_payload, indent=2)
                 return skill_handler
 
@@ -72,20 +109,25 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
 
 async def run_mcp_stdio_server():
     """Runs the MCP server over stdio transport."""
+    ensure_workspace_initialized()
+    log_visual_activity("DAEMON ACTIVE", "Autopoiesis Engine Daemon running in STDIO mode.", BOLD + GREEN)
     server = create_mcp_server()
     await server.run_stdio_async()
 
 
 def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
     """Creates FastAPI app for HTTP and SSE transport mode."""
+    ensure_workspace_initialized(base_dir)
     app = FastAPI(title="Autopoiesis Engine MCP Daemon")
 
     @app.get("/")
     async def root():
+        log_visual_activity("HTTP HEALTH CHECK", "Root GET / health check received.", CYAN)
         return {
             "name": "Autopoiesis Engine MCP Daemon",
             "version": "0.1.0",
             "status": "online",
+            "autopoiesis_active": True,
             "endpoints": {
                 "list_tools": "/tools",
                 "execute_tool": "/tools/{skill_id}/execute",
@@ -96,6 +138,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
 
     @app.get("/tools")
     async def list_tools():
+        log_visual_activity("MCP HANDSHAKE", "AI Agent listed available tools.", CYAN)
         registry = RegistryManager(base_dir=base_dir)
         tools = [
             {
@@ -132,6 +175,8 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
         registry = RegistryManager(base_dir=base_dir)
         payload = await request.json()
 
+        log_visual_activity("HTTP TOOL CALL", f"AI Agent requested execution of '{skill_id}'", MAGENTA)
+
         if skill_id == "execute_macro_intent":
             intent = payload.get("intent", "")
             active_namespaces = payload.get("active_namespaces", ["global"])
@@ -142,10 +187,12 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 required_pipeline_intent=intent,
             )
             results = parser.resolve_pipeline_intent(config)
+            log_visual_activity("HTTP INTENT SUCCESS", f"Intent executed: {len(results)} steps resolved.", GREEN)
             return {"intent": intent, "steps": [r.model_dump() for r in results]}
 
         skill = registry.get_skill(skill_id)
         if not skill or not skill.file_path:
+            log_visual_activity("HTTP TOOL ERROR", f"Skill '{skill_id}' not found.", YELLOW)
             return JSONResponse(
                 status_code=404,
                 content={"isError": True, "error": f"Skill '{skill_id}' not found."}
@@ -154,6 +201,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
         python_code = open(skill.file_path, "r", encoding="utf-8").read()
         res = SandboxExecutor.execute_skill_code(python_code, payload)
         if not res.success:
+            log_visual_activity("SANDBOX FAIL", f"Skill '{skill_id}' execution failed.", YELLOW)
             return JSONResponse(
                 status_code=400,
                 content={
@@ -162,19 +210,21 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                     "stderr": res.stderr,
                 }
             )
+        log_visual_activity("HTTP TOOL SUCCESS", f"Skill '{skill_id}' executed in {res.execution_time_sec:.3f}s", GREEN)
         return res.output_payload
 
     @app.get("/sse")
     async def handle_sse(request: Request):
         """MCP Server-Sent Events (SSE) connection endpoint."""
+        log_visual_activity("MCP SSE CONNECT", "Client connected via Server-Sent Events (/sse).", GREEN)
         async def event_generator():
-            # Initial endpoint event per MCP SSE specification
             yield {
                 "event": "endpoint",
                 "data": "/messages?session_id=autopoiesis_local"
             }
             while True:
                 if await request.is_disconnected():
+                    log_visual_activity("MCP SSE DISCONNECT", "Client disconnected from SSE.", YELLOW)
                     break
                 await asyncio.sleep(15)
                 yield {"event": "ping", "data": "keep-alive"}
@@ -189,6 +239,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
         msg_id = body.get("id")
 
         if method == "tools/list":
+            log_visual_activity("MCP SSE HANDSHAKE", "Received tools/list request via SSE messages.", CYAN)
             registry = RegistryManager(base_dir=base_dir)
             tools = [
                 {

@@ -1,0 +1,31 @@
+{
+  "id": "global.parsers.json_parser",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Parses JSON payload data and doubles numerical value fields.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "number"
+      },
+      "data": {
+        "type": "object"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "doubled_value": {
+        "type": "number"
+      }
+    }
+  },
+  "ast_hash": "57818c79ccb254bb68081778721de73350379d41629385e20eaf03f596a1ea9b",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/parsers/json_parser/skill.py"
+}

@@ -1,0 +1,33 @@
+{
+  "id": "global.file.writer",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Writes content or JSON data to a destination file path.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "filepath": {
+        "type": "string"
+      },
+      "content": {}
+    },
+    "required": [
+      "filepath",
+      "content"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "filepath": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "c3a771eea5894baa7315508f14d03a8040cea4158b919d9cc258b24ca3ea804e",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/file/writer/skill.py"
+}

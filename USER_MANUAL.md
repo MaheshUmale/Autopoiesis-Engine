@@ -1,6 +1,6 @@
 # User Manual: Autopoiesis-Engine
 
-Welcome to the **Autopoiesis Engine User Manual**. This document covers operating the CLI, managing skills in the 3-Tier Registry, executing DAG workflows, and enabling AI Coding Agents (Kilocode, VS Code, Cursor, Claude) to execute synthesized tools.
+Welcome to the **Autopoiesis Engine User Manual**. This document covers operating the CLI, managing skills in the 3-Tier Registry, executing DAG workflows, enabling AI Coding Agents (Kilocode, VS Code, Cursor, Claude) to execute synthesized tools, and verifying local execution state.
 
 ---
 
@@ -37,14 +37,14 @@ Launches the MCP Server daemon.
 
 ---
 
-## 2. How AI Agents (Kilocode / VS Code / Cursor) Execute Tools
+## 2. Verifying Autopoiesis Execution in Kilocode / VS Code / Cursor
 
-1. Your IDE (Kilocode, VS Code, Cursor) starts and reads its MCP configuration file (`.kilocode/mcp.json` or `.vscode/mcp.json`).
-2. The IDE launches `autopoiesis serve --mode stdio` in the background.
-3. When you prompt your AI Agent in Kilocode or VS Code:
-   > *"Parse JSON data from payload.json and double the value field"*
-4. The AI Agent inspects the available tools provided by the Autopoiesis Engine, formats a tool call request, and passes it to the engine over standard MCP stdio.
-5. The Autopoiesis Engine executes the code in a sandboxed subprocess and returns the result back to the AI Agent.
+When prompting an AI Agent (e.g., *"Parse JSON data from payload.json and double the value field"*), you can verify whether the action was executed by the **Autopoiesis Engine vs Raw LLM Chat** via:
+
+1. **Kilocode Chat UI Tool Badge:** Look for the tool invocation card in Kilocode chat (`Using Tool: autopoiesis-engine -> execute_macro_intent` or `global.parsers.json_parser`).
+2. **Local OTEL Trace Files:** Check `.autopoiesis/traces/{execution_id}.json` in your project folder. Every execution writes a JSON file recording execution time, stdout, stderr, and span attributes.
+3. **SQLite Database Logs:** Query `.autopoiesis/autopoiesis.db` to view registered skills, parameters, and execution history.
+4. **Daemon Terminal Logs:** When running `autopoiesis serve --mode http`, tool requests appear live in the terminal console.
 
 ---
 
