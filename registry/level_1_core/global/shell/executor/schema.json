@@ -9,10 +9,7 @@
       "command": {
         "type": "string"
       }
-    },
-    "required": [
-      "command"
-    ]
+    }
   },
   "outputs": {
     "type": "object",
@@ -22,13 +19,10 @@
       },
       "stdout": {
         "type": "string"
-      },
-      "stderr": {
-        "type": "string"
       }
     }
   },
-  "ast_hash": "b5e871252421f691f2639bdfe1d7bfb0bc4590d8bb8fbb84884a5d599ae7bd27",
+  "ast_hash": "e116960688c3e6971bc69dde2abd76b75c1bf2e7ec7020e6b9d83220bb1edf64",
   "created_at": null,
   "file_path": "/app/registry/level_1_core/global/shell/executor/skill.py"
 }

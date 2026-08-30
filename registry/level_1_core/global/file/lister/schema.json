@@ -6,7 +6,7 @@
   "inputs": {
     "type": "object",
     "properties": {
-      "dirpath": {
+      "directory": {
         "type": "string"
       }
     }
@@ -22,7 +22,7 @@
       }
     }
   },
-  "ast_hash": "c5335b0712167f9e34eae908a8cd45e0a53dd38a1856ec45342ab60081b48156",
+  "ast_hash": "489b7a8031e2742a0bacaef49c70aa1efcbde4ad97ed5e4bd17ccf78aaf59dad",
   "created_at": null,
   "file_path": "/app/registry/level_1_core/global/file/lister/skill.py"
 }

@@ -1,14 +1,16 @@
+import json, os
+
 def main(inputs: dict) -> dict:
-    """Reads file contents as text or JSON object."""
-    filepath = inputs.get("filepath", "")
-    from pathlib import Path
-    import json
-    p = Path(filepath)
-    if not p.exists():
-        raise FileNotFoundError(f"File not found: {filepath}")
-    raw_text = p.read_text(encoding="utf-8")
+    """Reads file contents from disk returning formatted text or JSON objects."""
+    filepath = inputs.get("filepath", inputs.get("file_path", inputs.get("payload", "")))
+    if isinstance(filepath, dict):
+        filepath = filepath.get("file_path", filepath.get("filepath", ""))
+    if not filepath or not os.path.exists(str(filepath)):
+        return {"status": "error", "error": f"File not found: {filepath}"}
+    with open(str(filepath), "r", encoding="utf-8") as f:
+        content = f.read()
     try:
-        data = json.loads(raw_text)
-        return {"status": "success", "filepath": str(p.resolve()), "content": data, "format": "json"}
+        parsed = json.loads(content)
+        return {"status": "success", "data": parsed, "output": parsed, "content": content, "filepath": str(filepath)}
     except Exception:
-        return {"status": "success", "filepath": str(p.resolve()), "content": raw_text, "format": "text"}
+        return {"status": "success", "content": content, "output": content, "filepath": str(filepath)}

@@ -9,10 +9,7 @@
       "filepath": {
         "type": "string"
       }
-    },
-    "required": [
-      "filepath"
-    ]
+    }
   },
   "outputs": {
     "type": "object",
@@ -20,13 +17,12 @@
       "status": {
         "type": "string"
       },
-      "content": {},
-      "format": {
+      "content": {
         "type": "string"
       }
     }
   },
-  "ast_hash": "1a71e1e4ba11656f8a663512a8b0679cc063fc0029ddb3d948e0d454bc34041b",
+  "ast_hash": "4daa2ea4aa819bb5e0caa4b48e4c66b7f1788751f06fb26db46780493c9c6270",
   "created_at": null,
   "file_path": "/app/registry/level_1_core/global/file/reader/skill.py"
 }

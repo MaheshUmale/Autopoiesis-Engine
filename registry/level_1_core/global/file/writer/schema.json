@@ -9,12 +9,8 @@
       "filepath": {
         "type": "string"
       },
-      "content": {}
-    },
-    "required": [
-      "filepath",
-      "content"
-    ]
+      "data": {}
+    }
   },
   "outputs": {
     "type": "object",
@@ -22,12 +18,12 @@
       "status": {
         "type": "string"
       },
-      "filepath": {
+      "saved_to": {
         "type": "string"
       }
     }
   },
-  "ast_hash": "c3a771eea5894baa7315508f14d03a8040cea4158b919d9cc258b24ca3ea804e",
+  "ast_hash": "18c08d192ef8dcb8545686d4ac5fd73ff7b17dc5f24f3f0e772e9afbf21ff0e7",
   "created_at": null,
   "file_path": "/app/registry/level_1_core/global/file/writer/skill.py"
 }

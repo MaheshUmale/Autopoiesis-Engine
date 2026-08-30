@@ -6,14 +6,8 @@
   "inputs": {
     "type": "object",
     "properties": {
-      "data": {},
-      "output_path": {
-        "type": "string"
-      }
-    },
-    "required": [
-      "data"
-    ]
+      "data": {}
+    }
   },
   "outputs": {
     "type": "object",
@@ -21,12 +15,10 @@
       "status": {
         "type": "string"
       },
-      "parquet_path": {
-        "type": "string"
-      }
+      "output": {}
     }
   },
-  "ast_hash": "e5666d74e425231d0d0b76752207a4353b581c1d75eb311c78d7ab73f63545ef",
+  "ast_hash": "0ad25baffd34eb98d3a5667d5613eb8eaa63c9a364b667310ddb418cdaf83058",
   "created_at": null,
   "file_path": "/app/registry/level_1_core/global/data/parquet_converter/skill.py"
 }

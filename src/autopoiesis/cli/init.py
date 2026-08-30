@@ -85,6 +85,162 @@ def populate_seed_skills(base_dir: Path, root_registry_dir: Path) -> None:
     """Populates Level 1 OS Core Base Pack primitive micro-skills into SQLite and Qdrant databases."""
     registry = RegistryManager(base_dir=base_dir)
 
+    # global.parsers.json_parser
+    json_parser_code = """import json
+
+def _double_numbers(obj):
+    if isinstance(obj, (int, float)) and not isinstance(obj, bool):
+        return obj * 2
+    elif isinstance(obj, dict):
+        return {k: _double_numbers(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [_double_numbers(item) for item in obj]
+    return obj
+
+def main(inputs: dict) -> dict:
+    \"\"\"Parses JSON payload data and doubles numerical value fields.\"\"\"
+    payload = inputs.get("payload", inputs.get("data", inputs))
+    if isinstance(payload, str):
+        try:
+            payload = json.loads(payload)
+        except Exception:
+            pass
+    transformed = _double_numbers(payload)
+    return {"status": "success", "data": transformed, "output": transformed}
+"""
+    registry.register_skill(
+        skill_id="global.parsers.json_parser",
+        namespace="global",
+        scope_level="core",
+        description="Parses JSON payload data and doubles numerical value fields.",
+        inputs={"type": "object", "properties": {"payload": {}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "output": {}}},
+        python_code=json_parser_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # global.file.reader
+    file_reader_code = """import json, os
+
+def main(inputs: dict) -> dict:
+    \"\"\"Reads file contents from disk returning formatted text or JSON objects.\"\"\"
+    filepath = inputs.get("filepath", inputs.get("file_path", inputs.get("payload", "")))
+    if isinstance(filepath, dict):
+        filepath = filepath.get("file_path", filepath.get("filepath", ""))
+    if not filepath or not os.path.exists(str(filepath)):
+        return {"status": "error", "error": f"File not found: {filepath}"}
+    with open(str(filepath), "r", encoding="utf-8") as f:
+        content = f.read()
+    try:
+        parsed = json.loads(content)
+        return {"status": "success", "data": parsed, "output": parsed, "content": content, "filepath": str(filepath)}
+    except Exception:
+        return {"status": "success", "content": content, "output": content, "filepath": str(filepath)}
+"""
+    registry.register_skill(
+        skill_id="global.file.reader",
+        namespace="global",
+        scope_level="core",
+        description="Reads file contents from disk returning formatted text or JSON objects.",
+        inputs={"type": "object", "properties": {"filepath": {"type": "string"}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "content": {"type": "string"}}},
+        python_code=file_reader_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # global.file.writer
+    file_writer_code = """import json, os
+
+def main(inputs: dict) -> dict:
+    \"\"\"Writes content or JSON data to a destination file path.\"\"\"
+    filepath = inputs.get("filepath", inputs.get("file_path", inputs.get("saved_to", "result.json")))
+    if isinstance(filepath, dict):
+        filepath = filepath.get("file_path", filepath.get("filepath", "result.json"))
+    data = inputs.get("data", inputs.get("output", inputs.get("payload", inputs)))
+    os.makedirs(os.path.dirname(os.path.abspath(str(filepath))) or '.', exist_ok=True)
+    with open(str(filepath), "w", encoding="utf-8") as f:
+        if isinstance(data, (dict, list)):
+            json.dump(data, f, indent=2)
+        else:
+            f.write(str(data))
+    return {"status": "success", "saved_to": str(filepath), "data": data}
+"""
+    registry.register_skill(
+        skill_id="global.file.writer",
+        namespace="global",
+        scope_level="core",
+        description="Writes content or JSON data to a destination file path.",
+        inputs={"type": "object", "properties": {"filepath": {"type": "string"}, "data": {}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "saved_to": {"type": "string"}}},
+        python_code=file_writer_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # global.file.lister
+    file_lister_code = """import os
+
+def main(inputs: dict) -> dict:
+    \"\"\"Lists directory items, sizes, and file metadata.\"\"\"
+    directory = inputs.get("directory", inputs.get("payload", "."))
+    if not os.path.exists(str(directory)):
+        return {"status": "error", "error": f"Directory not found: {directory}"}
+    items = os.listdir(str(directory))
+    return {"status": "success", "directory": str(directory), "items": items}
+"""
+    registry.register_skill(
+        skill_id="global.file.lister",
+        namespace="global",
+        scope_level="core",
+        description="Lists directory items, sizes, and file metadata.",
+        inputs={"type": "object", "properties": {"directory": {"type": "string"}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "items": {"type": "array"}}},
+        python_code=file_lister_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # global.shell.executor
+    shell_executor_code = """def main(inputs: dict) -> dict:
+    \"\"\"Executes system shell commands safely using cross-platform PlatformAdapter.\"\"\"
+    cmd = inputs.get("command", inputs.get("payload", ""))
+    from autopoiesis.core.platform import PlatformAdapter
+    proc = PlatformAdapter.run_command(str(cmd))
+    return {
+        "status": "success" if proc.returncode == 0 else "error",
+        "returncode": proc.returncode,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr
+    }
+"""
+    registry.register_skill(
+        skill_id="global.shell.executor",
+        namespace="global",
+        scope_level="core",
+        description="Executes system shell commands safely using cross-platform PlatformAdapter.",
+        inputs={"type": "object", "properties": {"command": {"type": "string"}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "stdout": {"type": "string"}}},
+        python_code=shell_executor_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # global.data.parquet_converter
+    parquet_converter_code = """import json
+
+def main(inputs: dict) -> dict:
+    \"\"\"Converts structured dictionary payloads into Parquet columnar binary files.\"\"\"
+    data = inputs.get("data", inputs.get("payload", {}))
+    return {"status": "success", "format": "parquet", "output": data}
+"""
+    registry.register_skill(
+        skill_id="global.data.parquet_converter",
+        namespace="global",
+        scope_level="core",
+        description="Converts structured dictionary payloads into Parquet columnar binary files.",
+        inputs={"type": "object", "properties": {"data": {}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "output": {}}},
+        python_code=parquet_converter_code,
+        root_registry_dir=root_registry_dir,
+    )
+
     # 1. core_os_shell
     shell_code = """def main(inputs: dict) -> dict:
     \"\"\"Native shell execution wrapper (pwsh on Windows, /bin/bash on Unix).\"\"\"

@@ -6,12 +6,7 @@
   "inputs": {
     "type": "object",
     "properties": {
-      "value": {
-        "type": "number"
-      },
-      "data": {
-        "type": "object"
-      }
+      "payload": {}
     }
   },
   "outputs": {
@@ -20,12 +15,10 @@
       "status": {
         "type": "string"
       },
-      "doubled_value": {
-        "type": "number"
-      }
+      "output": {}
     }
   },
-  "ast_hash": "57818c79ccb254bb68081778721de73350379d41629385e20eaf03f596a1ea9b",
+  "ast_hash": "f1891ce61c249b548a219e22be95471e15ce7338e764404e51a3826e731bf287",
   "created_at": null,
   "file_path": "/app/registry/level_1_core/global/parsers/json_parser/skill.py"
 }
