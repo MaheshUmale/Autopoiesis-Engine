@@ -17,6 +17,6 @@ def get_normalized_ast_hash(python_code: str) -> str:
             node.id = "_"
         # Strip docstrings
         if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.Module)) and node.body:
-            if isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant):
+            if isinstance(node.body[0], ast.Expr) and isinstance(node.body[0].value, ast.Constant) and isinstance(node.body[0].value.value, str):
                 node.body.pop(0)
     return hashlib.sha256(ast.dump(tree).encode("utf-8")).hexdigest()
