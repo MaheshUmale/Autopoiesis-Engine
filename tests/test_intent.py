@@ -15,33 +15,29 @@ def test_look_ahead_parser_step_parsing(tmp_path: Path):
     assert "Fetch candles from Upstox" in steps[0]
 
 
-def test_look_ahead_parser_resolution_and_synthesis_flag(tmp_path: Path):
+def test_look_ahead_parser_auto_synthesis(tmp_path: Path):
     base_dir = tmp_path / ".autopoiesis"
     registry = RegistryManager(base_dir=base_dir)
-
-    # Register a known skill
-    registry.register_skill(
-        skill_id="trading.upstox.fetch",
-        namespace="trading.broker.upstox",
-        scope_level="variant",
-        description="Fetch candles from Upstox",
-        inputs={},
-        outputs={},
-        python_code="def main(inputs): return {}",
-        root_registry_dir=tmp_path / "registry"
-    )
-
     parser = LookAheadParser(registry)
+
     config = ProjectConfig(
-        project_id="test_proj",
+        project_id="test_auto_synth_proj",
         active_namespaces=["trading.broker.upstox"],
-        required_pipeline_intent="Fetch candles from Upstox, unknown missing action"
+        required_pipeline_intent="Fetch historical OHLCV data from Upstox API"
     )
 
-    results = parser.resolve_pipeline_intent(config)
-    assert len(results) == 2
-    assert results[0].synthesis_required is False or results[0].synthesis_required is True
-    assert isinstance(results[0], StepMatchResult)
+    results = parser.resolve_pipeline_intent(config, auto_synthesize=True, root_registry_dir=tmp_path / "registry")
+    assert len(results) == 1
+    res = results[0]
+    assert res.match_found is True
+    assert res.synthesis_required is True
+    assert res.skill_id is not None
+    assert res.synthesized_skill is not None
+
+    # Verify synthesized skill exists in SQLite and Qdrant
+    skill_meta = registry.get_skill(res.skill_id)
+    assert skill_meta is not None
+    assert Path(skill_meta.file_path).exists()
 
 
 def test_look_ahead_parser_template_extraction(tmp_path: Path):

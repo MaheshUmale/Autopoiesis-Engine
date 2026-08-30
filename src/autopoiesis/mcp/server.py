@@ -63,9 +63,9 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
             active_namespaces=active_namespaces or ["global"],
             required_pipeline_intent=intent,
         )
-        results = parser.resolve_pipeline_intent(config)
+        results = parser.resolve_pipeline_intent(config, auto_synthesize=True)
         output_data = [res.model_dump() for res in results]
-        log_visual_activity("MCP INTENT COMPLETE", f"Resolved {len(results)} execution steps.", GREEN)
+        log_visual_activity("MCP INTENT COMPLETE", f"Resolved & synthesized {len(results)} execution steps.", GREEN)
         return json.dumps({"intent": intent, "steps": output_data}, indent=2)
 
     app_server.add_tool(
@@ -158,7 +158,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 "id": "run_intent",
                 "namespace": "global",
                 "scope_level": "core",
-                "description": "Catch-all orchestration tool. Pass natural language instructions directly to run workflows.",
+                "description": "Catch-all orchestration tool. Pass natural language instructions directly.",
                 "inputs": {
                     "type": "object",
                     "properties": {
@@ -272,7 +272,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 active_namespaces=active_namespaces,
                 required_pipeline_intent=intent,
             )
-            results = parser.resolve_pipeline_intent(config)
+            results = parser.resolve_pipeline_intent(config, auto_synthesize=True)
             log_visual_activity("HTTP INTENT SUCCESS", f"Intent executed: {len(results)} steps resolved.", GREEN)
             return {"intent": intent, "steps": [r.model_dump() for r in results]}
 
