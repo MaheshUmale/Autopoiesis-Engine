@@ -1,0 +1,24 @@
+{
+  "id": "global.parse_d_openalgo_input_json_fadf7f",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Autonomously synthesized micro-skill: Parse D:\\OpenALGO\\input.json",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "payload": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "output": {}
+    }
+  },
+  "ast_hash": "59ab416b12b4197b6c88e01ee7fb62f790957b2a5f8c326f4ad87361bf0e2e72",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/parse_d_openalgo_input_json_fadf7f/skill.py"
+}
