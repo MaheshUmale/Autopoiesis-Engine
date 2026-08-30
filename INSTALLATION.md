@@ -1,6 +1,6 @@
 # Installation Guide: Autopoiesis-Engine
 
-This guide covers installing `autopoiesis-engine` across Linux, macOS, and Windows.
+This guide covers step-by-step installation instructions for `autopoiesis-engine` across Linux, macOS, and Windows.
 
 ---
 
@@ -14,64 +14,89 @@ This guide covers installing `autopoiesis-engine` across Linux, macOS, and Windo
 
 ---
 
-## Installation Methods
+## Option 1: Automated 1-Click Installation (Recommended)
 
-### Method 1: Local Source Installation (Recommended for Development)
+Run the included platform-specific installation script in your project directory:
 
-Clone the repository, navigate into the directory, and install in editable mode:
+### Windows (PowerShell):
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; .\install.ps1
+```
+
+### Linux / macOS:
+```bash
+chmod +x install.sh && ./install.sh
+```
+
+---
+
+## Option 2: Manual Step-by-Step Installation
+
+Clone the repository and install in editable mode:
 
 ```bash
 git clone https://github.com/autopoiesis/autopoiesis-engine.git
 cd autopoiesis-engine
 ```
 
+### Step 1: Create and Activate Virtual Environment
+
 #### Linux / macOS:
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev]"
 ```
 
 #### Windows (PowerShell):
 ```powershell
 python -m venv .venv
-# If script execution is restricted, run: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
 .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
 ```
 
 #### Windows (Command Prompt - `cmd.exe`):
 ```cmd
 python -m venv .venv
 .\.venv\Scripts\activate.bat
-pip install -e ".[dev]"
-```
-
-#### Using `uv` (Local Folder):
-When installing from a local repository clone (before PyPI release), install from the current directory `.`:
-```powershell
-# Install into active virtualenv using uv
-uv pip install -e .
-
-# Or install globally as a tool from local folder
-uv tool install .
 ```
 
 ---
 
-### Method 2: Global Tool Installation via `pipx` / `uv`
+### Step 2: Install Package from Local Source Directory
 
-To install the CLI tool globally from source directory:
+> **Important Note:** Do not run `uv tool install autopoiesis-engine` directly without specifying a local path before the package is published to PyPI. Always install from the local folder target `.`.
 
-```powershell
-# Install from local directory using uv
+#### Using `pip`:
+```bash
+pip install --upgrade pip
+pip install -e ".[dev]"
+```
+
+#### Using `uv`:
+```bash
+# Install into active virtualenv using uv
+uv pip install -e .
+
+# Or install as a global tool from the local folder
 uv tool install .
+```
 
-# Or install from local directory using pipx
+#### Using `pipx`:
+```bash
 pipx install .
 ```
 
-> **Note:** Running `uv tool install autopoiesis-engine` without publishing to PyPI will fail with a `not found in package registry` error. Always specify the local directory path `.` when installing from source.
+---
+
+### Step 3: Initialize Workspace
+
+After installing the package, run:
+
+```bash
+autopoiesis init
+```
+
+This creates `.autopoiesis/`, `registry/` directories, and generates/injects `mcp.json` configs for VS Code, Cursor, Claude Desktop, and Kilocode.
 
 ---
 

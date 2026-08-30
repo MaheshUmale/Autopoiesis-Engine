@@ -73,7 +73,7 @@ class SandboxExecutor:
 
     @classmethod
     def execute_skill_code(
-        self,
+        cls,
         python_code: str,
         input_payload: Dict[str, Any],
         cwd: Path | str | None = None
@@ -83,9 +83,9 @@ class SandboxExecutor:
         The code is expected to define a `main(inputs: dict) -> dict` function.
         """
         # Hydrate input payload if it's a file pointer
-        hydrated_input = self.hydrate_payload_from_storage(input_payload)
+        hydrated_input = cls.hydrate_payload_from_storage(input_payload)
         input_bytes = len(json.dumps(hydrated_input).encode("utf-8"))
-        timeout = self.calculate_timeout(input_bytes)
+        timeout = cls.calculate_timeout(input_bytes)
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
@@ -95,12 +95,12 @@ class SandboxExecutor:
 
             input_file.write_text(json.dumps(hydrated_input), encoding="utf-8")
 
-            # Harness wrapper to execute main() safely
-            harness_code = f"""
-import json
+            # Harness wrapper to execute main() safely without f-string interpolation issues
+            harness_prefix = """import json
 import sys
 
-{python_code}
+"""
+            harness_suffix = f"""
 
 if __name__ == "__main__":
     try:
@@ -119,6 +119,7 @@ if __name__ == "__main__":
         sys.stderr.write(traceback.format_exc())
         sys.exit(1)
 """
+            harness_code = harness_prefix + python_code + harness_suffix
             script_file.write_text(harness_code, encoding="utf-8")
 
             import time
