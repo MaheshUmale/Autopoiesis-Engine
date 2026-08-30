@@ -11,14 +11,35 @@ def test_mcp_fastapi_endpoints(tmp_path: Path):
 
     response = client.get("/")
     assert response.status_code == 200
-    data = response.json()
-    assert data["status"] == "online"
-    assert "list_tools" in data["endpoints"]
-    assert "resources_registry" in data["endpoints"]
+
+    ui_res = client.get("/ui")
+    assert ui_res.status_code == 200
+    assert "AUTOPOIESIS ENGINE" in ui_res.text
+
+    dash_res = client.get("/dashboard")
+    assert dash_res.status_code == 200
 
     tools_res = client.get("/tools")
     assert tools_res.status_code == 200
     assert isinstance(tools_res.json(), list)
+
+
+def test_mcp_dashboard_api_endpoints(tmp_path: Path):
+    app = create_fastapi_app(base_dir=str(tmp_path / ".autopoiesis"))
+    client = TestClient(app)
+
+    api_agents = client.get("/api/dashboard/agents")
+    assert api_agents.status_code == 200
+    data = api_agents.json()
+    assert "stats" in data
+    assert "agents" in data
+    assert isinstance(data["agents"], list)
+
+    api_logs = client.get("/api/dashboard/logs/global.parsers.json_parser")
+    assert api_logs.status_code == 200
+    log_data = api_logs.json()
+    assert log_data["agent_id"] == "global.parsers.json_parser"
+    assert "logs" in log_data
 
 
 def test_mcp_resources_endpoints(tmp_path: Path):
