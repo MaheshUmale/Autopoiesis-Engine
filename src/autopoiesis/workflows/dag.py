@@ -51,7 +51,7 @@ class AutopoiesisDAGWorkflow:
 
     @workflow.run
     async def run(self, dag_template: Dict[str, Any], initial_parameters: Dict[str, Any] | None = None) -> Dict[str, Any]:
-        execution_id = str(uuid.uuid4())
+        execution_id = workflow.info().workflow_id
         parameters = initial_parameters or dag_template.get("parameters", {})
         dag = dag_template.get("dag", {})
         nodes: List[Dict[str, Any]] = dag.get("nodes", [])

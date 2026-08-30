@@ -6,13 +6,29 @@
 
 ---
 
+## ⚡ 1-Line Automated Installation
+
+Choose your platform to run the single-command installer script:
+
+### Windows (PowerShell):
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process; .\install.ps1
+```
+
+### Linux / macOS:
+```bash
+chmod +x install.sh && ./install.sh
+```
+
+---
+
 ## Key Features
 
 - **Autopoietic Tool Synthesis:** Eliminates hardcoded agent tools by dynamically synthesizing missing micro-skills on-demand.
 - **3-Tier Registry Architecture:**
-  - `Level 1 Core`: Universal primitive micro-skills.
-  - `Level 2 Variants`: Domain-specific skill implementations.
-  - `Level 3 Templates`: Parameterized macro workflow composite DAGs.
+  - `Level 1 Core`: Universal primitive micro-skills (`registry/level_1_core`).
+  - `Level 2 Variants`: Domain-specific skill implementations (`registry/level_2_variants`).
+  - `Level 3 Templates`: Parameterized macro workflow composite DAGs (`registry/level_3_templates`).
 - **Normalized AST Deduplication:** Structural code fingerprints strip comments, docstrings, and parameter identifiers to prevent duplicate logic.
 - **Isolated Sandbox Execution:** Subprocess sandboxing with dynamic timeout scaling ($\text{Timeout} = 5.0 + (\text{Payload}_{\text{MB}} \times 2.0)$).
 - **Inter-Node State Thresholding:** 100 KB boundary rule separating inline Temporal activity state from Parquet file pointers to prevent payload limit breaches.
@@ -21,24 +37,28 @@
 
 ---
 
-## Quick Start
+## Quick Start Manual Commands
 
 ```bash
-# 1. Install via pip / uv
-pip install -e .
+# 1. Install package in editable mode
+pip install -e ".[dev]"
 
 # 2. Initialize project workspace & IDE configurations
 autopoiesis init
 
 # 3. Start local MCP daemon
+# stdio mode for IDEs:
 autopoiesis serve --mode stdio
+
+# HTTP server mode for web/daemon mode:
+autopoiesis serve --mode http --host 127.0.0.1 --port 8000
 ```
 
 ---
 
 ## Documentation
 
-- **[Installation Guide](INSTALLATION.md):** Detailed guide on environment prerequisites and distribution setup.
+- **[Installation Guide](INSTALLATION.md):** Step-by-step installation instructions for Linux, macOS, and Windows.
 - **[Setup Guide](SETUP_GUIDE.md):** Configuration instructions for IDEs (Cursor, Claude Desktop, VS Code, Kilocode).
 - **[User Manual](USER_MANUAL.md):** Complete guide on CLI commands, MCP tool usage, DAG workflows, and Registry management.
 - **[Technical Specification](REQUIREMENTS.md):** Complete architectural requirements document.
