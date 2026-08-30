@@ -1,0 +1,47 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "autopoiesis-engine"
+version = "0.1.0"
+description = "Self-evolving, multi-tenant agent execution framework using MCP and Temporal."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Autopoiesis Contributors" }
+]
+
+dependencies = [
+    "temporalio>=1.5.0",
+    "qdrant-client>=1.7.0",
+    "pydantic>=2.0.0",
+    "libtmux>=0.28.0",
+    "mcp>=1.0.0",
+    "opentelemetry-sdk>=1.20.0",
+    "opentelemetry-api>=1.20.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "pyyaml>=6.0",
+    "pyarrow>=14.0.0",
+    "fastparquet>=2023.10.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.2.0",
+    "mypy>=1.8.0"
+]
+
+[project.scripts]
+autopoiesis = "autopoiesis.cli.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/autopoiesis"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
