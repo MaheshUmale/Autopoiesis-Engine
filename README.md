@@ -1,68 +1,62 @@
-# Autopoiesis-Engine
+# Autopoiesis-Engine: Windows Quick Start Guide
 
-**Self-Evolving, Multi-Tenant Agent Execution Framework**
-
-`Autopoiesis-Engine` is an autonomous AI agent execution engine built on top of the **Model Context Protocol (MCP)**, **Temporal.io Distributed Harness**, and **OpenTelemetry**. It enables autonomous coding agents (Cursor, Claude 3.5 Sonnet, Windsurf, Devika, Kilocode) to synthesize, test, cache, self-heal, and orchestrate micro-skills into composite workflow Directed Acyclic Graphs (DAGs) using a biological paradigm (**DNA $\rightarrow$ RNA $\rightarrow$ Protein Synthesis**).
+**Autonomous AI Agent Execution Engine for Kilocode, Cursor, VS Code & Claude Desktop**
 
 ---
 
-## ⚡ Direct 1-Line Installation Commands
+## ⚡ 1-Step Windows Setup
 
-### Option A: Install Directly from Git Repo (Windows / macOS / Linux)
-
-```powershell
-# Windows PowerShell / CMD / Terminal:
-pip install git+https://github.com/autopoiesis/autopoiesis-engine.git
-
-# Global installation via uv tool:
-uv tool install git+https://github.com/autopoiesis/autopoiesis-engine.git
-```
-
-### Option B: Run Automated Installer Script in Local Clone
+Open PowerShell in your project directory and run this single command:
 
 ```powershell
-# Windows PowerShell:
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force; .\install.ps1
 ```
 
-```bash
-# Linux / macOS:
-chmod +x install.sh && ./install.sh
-```
+### What `install.ps1` automatically does for you:
+1. Creates a local Python environment (`.venv`) and installs `autopoiesis-engine`.
+2. Initializes local storage (`.autopoiesis/`) and pre-seeds OS Core micro-skills.
+3. Automatically writes `.kilocode/mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, and `.cursorrules` pointing to your local environment binary!
 
 ---
 
-## Key Features
+## 🚀 How to Use with AI Agents (Kilocode / Cursor / VS Code / Claude)
 
-- **Autopoietic Tool Synthesis:** Eliminates hardcoded agent tools by dynamically synthesizing missing micro-skills on-demand.
-- **3-Tier Registry Architecture:**
-  - `Level 1 Core`: Universal primitive micro-skills (`registry/level_1_core`).
-  - `Level 2 Variants`: Domain-specific skill implementations (`registry/level_2_variants`).
-  - `Level 3 Templates`: Parameterized macro workflow composite DAGs (`registry/level_3_templates`).
-- **Normalized AST Deduplication:** Structural code fingerprints strip comments, docstrings, and parameter identifiers to prevent duplicate logic.
-- **Isolated Sandbox Execution:** Subprocess sandboxing with dynamic timeout scaling ($\text{Timeout} = 5.0 + (\text{Payload}_{\text{MB}} \times 2.0)$).
-- **Inter-Node State Thresholding:** 100 KB boundary rule separating inline Temporal activity state from Parquet file pointers to prevent payload limit breaches.
-- **Temporal.io Harness & Self-Healing:** Deterministic DAG execution with a diagnostic decision tree loop capped at 3 hotfix attempts.
-- **Multi-IDE MCP Support:** Exposes active skills via Model Context Protocol over `stdio` and `HTTP/SSE` for Claude Desktop, Cursor, VS Code, and Kilocode.
+### Step 1: Open your project folder in your IDE (Kilocode / Cursor / VS Code).
+*(If the IDE was already open, press `Ctrl+Shift+P` and select `Developer: Reload Window` so it loads the newly created `mcp.json`).*
+
+### Step 2: Prompt your AI Agent naturally!
+You do **NOT** need to manually start a daemon or remember tool names. Simply prompt your AI Agent in Kilocode or Cursor:
+> *"Parse data from input.json, double the numbers, and save to result.json"*
+
+The AI Agent will automatically invoke the Autopoiesis Engine (`run_intent` / `execute_macro_intent`) and execute the task!
 
 ---
 
-## Quick Start Manual Commands
+## 🖥️ (Optional) Web Dashboard & Process Monitoring
+
+To view all active agents, execution statistics, and real-time logs in your web browser:
+
+1. Open PowerShell and run:
+   ```powershell
+   autopoiesis serve --mode http --host 127.0.0.1 --port 8000
+   ```
+2. Open **`http://127.0.0.1:8000/ui`** in your browser.
+
+---
+
+## 🔄 Reinstalling or Resetting Workspace
+
+To clear legacy databases and perform a clean reinstallation:
 
 ```powershell
-# Windows PowerShell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e ".[dev]"
-autopoiesis init
-autopoiesis serve --mode stdio
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process -Force; .\reinstall.ps1
 ```
 
 ---
 
-## Documentation
+## 📚 Detailed Documentation
 
-- **[Installation Guide](INSTALLATION.md):** Detailed installation steps for Windows, macOS, and Linux.
-- **[Setup Guide](SETUP_GUIDE.md):** Configuration instructions for IDEs (Cursor, Claude Desktop, VS Code, Kilocode).
-- **[User Manual](USER_MANUAL.md):** Complete guide on CLI commands, MCP tool usage, DAG workflows, and Registry management.
-- **[Technical Specification](REQUIREMENTS.md):** Complete architectural requirements document (FRD & TRD).
+- **[Installation & Reinstallation Guide](INSTALLATION.md)**
+- **[IDE Setup & Verification Guide](SETUP_GUIDE.md)**
+- **[User Manual](USER_MANUAL.md)**
+- **[Technical Specifications Specification](REQUIREMENTS.md)**
