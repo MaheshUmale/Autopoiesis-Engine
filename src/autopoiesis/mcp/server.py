@@ -1,7 +1,6 @@
 import asyncio
 import json
 import sqlite3
-import datetime
 from typing import Any, Dict, List
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -13,7 +12,7 @@ import mcp.types as types
 from autopoiesis.registry.manager import RegistryManager
 from autopoiesis.sandbox.executor import SandboxExecutor
 from autopoiesis.core.intent import LookAheadParser, ProjectConfig
-from autopoiesis.cli.init import init_workspace
+from autopoiesis.cli.init import init_workspace, PlatformAdapter
 
 # ANSI Color constants for visual terminal feedback
 RESET = "\033[0m"
@@ -26,6 +25,7 @@ MAGENTA = "\033[95m"
 
 def log_visual_activity(tag: str, message: str, color: str = CYAN):
     """Prints a highlighted real-time visual console log entry."""
+    import datetime
     timestamp = datetime.datetime.now().strftime("%H:%M:%S")
     print(f"{BOLD}{color}[AUTOPOIESIS | {timestamp}] [{tag}]{RESET} {message}", flush=True)
 
@@ -38,6 +38,10 @@ def ensure_workspace_initialized(base_dir: str = ".autopoiesis"):
         log_visual_activity("AUTO-INIT", "Workspace not initialized. Auto-running self-initialization...", YELLOW)
         init_workspace(".")
         log_visual_activity("AUTO-INIT", "Workspace & seed database initialized successfully!", GREEN)
+    else:
+        # Run startup delta indexing reconciliation
+        reg = RegistryManager(base_dir=base_dir)
+        reg.sync_delta_indexing()
 
 
 def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
@@ -49,9 +53,9 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
     def get_registry():
         return RegistryManager(base_dir=base_dir)
 
-    # Register primary project orchestrator tool: execute_macro_intent
-    async def execute_macro_intent_handler(intent: str, active_namespaces: List[str] = None) -> str:
-        log_visual_activity("MCP AGENT ENGAGED", f"Executing macro intent: '{intent}'", MAGENTA)
+    # Register primary project orchestrator tool: run_intent / execute_macro_intent
+    async def run_intent_handler(intent: str, active_namespaces: List[str] = None) -> str:
+        log_visual_activity("MCP AGENT ENGAGED", f"Executing intent: '{intent}'", MAGENTA)
         reg = get_registry()
         parser = LookAheadParser(reg)
         config = ProjectConfig(
@@ -65,7 +69,13 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
         return json.dumps({"intent": intent, "steps": output_data}, indent=2)
 
     app_server.add_tool(
-        fn=execute_macro_intent_handler,
+        fn=run_intent_handler,
+        name="run_intent",
+        description="Catch-all orchestration tool. Call this tool with raw user instructions to execute natural language tasks, scripts, and workflows automatically.",
+    )
+
+    app_server.add_tool(
+        fn=run_intent_handler,
         name="execute_macro_intent",
         description="Primary project orchestrator tool for end-to-end intent processing and resolution.",
     )
@@ -131,6 +141,9 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
             "endpoints": {
                 "list_tools": "/tools",
                 "execute_tool": "/tools/{skill_id}/execute",
+                "resources_registry": "/resources/registry",
+                "resources_history": "/resources/state/history",
+                "resources_config": "/resources/config",
                 "sse": "/sse",
                 "messages": "/messages"
             }
@@ -141,6 +154,20 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
         log_visual_activity("MCP HANDSHAKE", "AI Agent listed available tools.", CYAN)
         registry = RegistryManager(base_dir=base_dir)
         tools = [
+            {
+                "id": "run_intent",
+                "namespace": "global",
+                "scope_level": "core",
+                "description": "Catch-all orchestration tool. Pass natural language instructions directly to run workflows.",
+                "inputs": {
+                    "type": "object",
+                    "properties": {
+                        "intent": {"type": "string"},
+                        "active_namespaces": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["intent"]
+                }
+            },
             {
                 "id": "execute_macro_intent",
                 "namespace": "global",
@@ -170,6 +197,65 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 })
         return tools
 
+    @app.get("/resources/registry")
+    async def resource_registry():
+        """MCP Resource Endpoint: Complete JSON tree of registered Level 1, 2, 3 skills and schemas."""
+        registry = RegistryManager(base_dir=base_dir)
+        with sqlite3.connect(registry.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, namespace, scope_level, description, inputs_json, outputs_json, ast_hash FROM skills")
+            skills = [
+                {
+                    "id": r[0],
+                    "namespace": r[1],
+                    "scope_level": r[2],
+                    "description": r[3],
+                    "inputs": json.loads(r[4]),
+                    "outputs": json.loads(r[5]),
+                    "ast_hash": r[6]
+                }
+                for r in cursor.fetchall()
+            ]
+            cursor.execute("SELECT template_id, namespace, description, parameters_json, dag_json FROM templates")
+            templates = [
+                {
+                    "template_id": r[0],
+                    "namespace": r[1],
+                    "description": r[2],
+                    "parameters": json.loads(r[3]),
+                    "dag": json.loads(r[4])
+                }
+                for r in cursor.fetchall()
+            ]
+        return {"resource": "resource://autopoiesis/registry", "skills": skills, "templates": templates}
+
+    @app.get("/resources/state/history")
+    async def resource_history():
+        """MCP Resource Endpoint: Real-time execution history and trace metrics."""
+        traces_dir = PlatformAdapter.sanitize_path(base_dir) / "traces"
+        traces_data = []
+        if traces_dir.exists():
+            for trace_file in traces_dir.glob("*.json"):
+                try:
+                    traces_data.append({
+                        "execution_id": trace_file.stem,
+                        "trace": json.loads(trace_file.read_text(encoding="utf-8"))
+                    })
+                except Exception:
+                    pass
+        return {"resource": "resource://autopoiesis/state/history", "executions": traces_data}
+
+    @app.get("/resources/config")
+    async def resource_config():
+        """MCP Resource Endpoint: Active project config and storage paths."""
+        return {
+            "resource": "resource://autopoiesis/config",
+            "base_dir": str(PlatformAdapter.sanitize_path(base_dir)),
+            "db_path": str(PlatformAdapter.sanitize_path(base_dir) / "autopoiesis.db"),
+            "qdrant_dir": str(PlatformAdapter.sanitize_path(base_dir) / "qdrant"),
+            "staging_dir": str(PlatformAdapter.sanitize_path(base_dir) / "staging"),
+        }
+
     @app.post("/tools/{skill_id:path}/execute")
     async def execute_tool(skill_id: str, request: Request):
         registry = RegistryManager(base_dir=base_dir)
@@ -177,7 +263,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
 
         log_visual_activity("HTTP TOOL CALL", f"AI Agent requested execution of '{skill_id}'", MAGENTA)
 
-        if skill_id == "execute_macro_intent":
+        if skill_id in ("run_intent", "execute_macro_intent"):
             intent = payload.get("intent", "")
             active_namespaces = payload.get("active_namespaces", ["global"])
             parser = LookAheadParser(registry)
@@ -243,6 +329,11 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
             registry = RegistryManager(base_dir=base_dir)
             tools = [
                 {
+                    "name": "run_intent",
+                    "description": "Catch-all orchestration tool. Pass natural language instructions directly.",
+                    "inputSchema": {"type": "object", "properties": {"intent": {"type": "string"}}, "required": ["intent"]}
+                },
+                {
                     "name": "execute_macro_intent",
                     "description": "Primary project orchestrator tool for end-to-end intent processing.",
                     "inputSchema": {"type": "object", "properties": {"intent": {"type": "string"}}, "required": ["intent"]}
@@ -259,6 +350,20 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                         "inputSchema": json.loads(r[2])
                     })
             return {"jsonrpc": "2.0", "id": msg_id, "result": {"tools": tools}}
+
+        if method == "resources/read":
+            uri = body.get("params", {}).get("uri", "")
+            registry = RegistryManager(base_dir=base_dir)
+            if "registry" in uri:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": msg_id,
+                    "result": {
+                        "contents": [
+                            {"uri": uri, "mimeType": "application/json", "text": json.dumps({"status": "active"})}
+                        ]
+                    }
+                }
 
         return {"jsonrpc": "2.0", "id": msg_id, "result": {}}
 

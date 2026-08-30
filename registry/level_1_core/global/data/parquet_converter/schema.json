@@ -1,0 +1,32 @@
+{
+  "id": "global.data.parquet_converter",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Converts structured dictionary payloads into Parquet columnar binary files.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "data": {},
+      "output_path": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "parquet_path": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "e5666d74e425231d0d0b76752207a4353b581c1d75eb311c78d7ab73f63545ef",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/data/parquet_converter/skill.py"
+}

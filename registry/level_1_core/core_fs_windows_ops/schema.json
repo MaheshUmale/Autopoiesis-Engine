@@ -1,0 +1,37 @@
+{
+  "id": "core_fs_windows_ops",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Robust file system operations (read/write/attributes) with UTF-8 encoding support.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "filepath": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "filepath"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "content": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "d3cb5f49e1f46ee9c712b5ad26a4f3dda8363afb51f32e897bcbf8d53c870858",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/core_fs_windows_ops/skill.py"
+}

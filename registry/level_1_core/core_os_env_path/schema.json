@@ -1,0 +1,31 @@
+{
+  "id": "core_os_env_path",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Queries environment variables and resolves OS-native paths.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "variable_name": {
+        "type": "string"
+      },
+      "path_str": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "value": {
+        "type": "string"
+      },
+      "resolved_path": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "c327d8bc74561878009b72f962a335e9b6d6a8e35c45538347ef48e852cf518b",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/core_os_env_path/skill.py"
+}

@@ -1,0 +1,27 @@
+{
+  "id": "core_data_utilities",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Utilities for fast JSON/YAML processing and data transformations.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "data": {}
+    },
+    "required": [
+      "data"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "processed_data": {}
+    }
+  },
+  "ast_hash": "b39b3d2d245309aa790463e6afc69d7f0b3d5780ab5a512f51704ee9f075d5e2",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/core_data_utilities/skill.py"
+}

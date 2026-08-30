@@ -14,11 +14,24 @@ def test_mcp_fastapi_endpoints(tmp_path: Path):
     data = response.json()
     assert data["status"] == "online"
     assert "list_tools" in data["endpoints"]
-    assert "sse" in data["endpoints"]
+    assert "resources_registry" in data["endpoints"]
 
     tools_res = client.get("/tools")
     assert tools_res.status_code == 200
     assert isinstance(tools_res.json(), list)
+
+
+def test_mcp_resources_endpoints(tmp_path: Path):
+    app = create_fastapi_app(base_dir=str(tmp_path / ".autopoiesis"))
+    client = TestClient(app)
+
+    reg_res = client.get("/resources/registry")
+    assert reg_res.status_code == 200
+    assert reg_res.json()["resource"] == "resource://autopoiesis/registry"
+
+    cfg_res = client.get("/resources/config")
+    assert cfg_res.status_code == 200
+    assert cfg_res.json()["resource"] == "resource://autopoiesis/config"
 
 
 def test_mcp_messages_endpoint(tmp_path: Path):

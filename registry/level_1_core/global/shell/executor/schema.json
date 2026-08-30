@@ -1,0 +1,34 @@
+{
+  "id": "global.shell.executor",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Executes system shell commands safely using cross-platform PlatformAdapter.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "command"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "stdout": {
+        "type": "string"
+      },
+      "stderr": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "b5e871252421f691f2639bdfe1d7bfb0bc4590d8bb8fbb84884a5d599ae7bd27",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/shell/executor/skill.py"
+}

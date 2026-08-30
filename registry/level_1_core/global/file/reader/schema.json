@@ -1,0 +1,32 @@
+{
+  "id": "global.file.reader",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Reads file contents from disk returning formatted text or JSON objects.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "filepath": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "filepath"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "content": {},
+      "format": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "1a71e1e4ba11656f8a663512a8b0679cc063fc0029ddb3d948e0d454bc34041b",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/file/reader/skill.py"
+}
