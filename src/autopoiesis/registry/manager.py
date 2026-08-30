@@ -1,6 +1,7 @@
 import json
 import sqlite3
 import hashlib
+import atexit
 from pathlib import Path
 from typing import Any, Optional, Dict, List
 from pydantic import BaseModel, Field
@@ -10,6 +11,19 @@ from qdrant_client.models import Distance, VectorParams, PointStruct, Filter, Fi
 
 from autopoiesis.core.ast import get_normalized_ast_hash
 from autopoiesis.core.platform import PlatformAdapter
+
+
+def _cleanup_qdrant_instances():
+    """Explicitly closes all active QdrantClient instances prior to interpreter shutdown."""
+    for client in list(RegistryManager._qdrant_instances.values()):
+        try:
+            client.close()
+        except Exception:
+            pass
+    RegistryManager._qdrant_instances.clear()
+
+
+atexit.register(_cleanup_qdrant_instances)
 
 
 class SkillMetadata(BaseModel):
