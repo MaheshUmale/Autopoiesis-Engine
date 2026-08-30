@@ -101,7 +101,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                     <span class="status-dot active"></span> DAEMON ONLINE
                 </span>
                 <button class="btn btn-outline-info btn-sm" onclick="fetchDashboardData()">
-                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+                    <i class="bi bi-arrow-clockwise me-1"></i> Refresh Now
                 </button>
             </div>
         </div>
@@ -145,11 +145,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             <div class="col-md-6">
                 <div class="input-group">
                     <span class="input-group-text bg-slate-800 border-secondary text-secondary"><i class="bi bi-search"></i></span>
-                    <input type="text" id="agent-search" class="form-form-control search-box form-control" placeholder="Search agents by ID, description, or namespace..." oninput="filterAgents()">
+                    <input type="text" id="agent-search" class="form-control search-box" placeholder="Search agents by ID, description, or namespace..." oninput="filterAgents()">
                 </div>
             </div>
             <div class="col-md-6 text-end text-secondary small">
-                Auto-refreshing every 3s | Local Engine: <code class="text-info">.autopoiesis/autopoiesis.db</code>
+                Live Auto-polling every 2s | Storage: <code class="text-info">.autopoiesis/traces/</code>
             </div>
         </div>
 
@@ -228,7 +228,7 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             filtered.forEach(agent => {
                 const badgeClass = agent.scope_level === 'core' ? 'badge-core' : (agent.scope_level === 'template' ? 'badge-template' : 'badge-variant');
                 const runsCount = agent.execution_count || 0;
-                const statusHtml = runsCount > 0 ? `<span class="status-dot active"></span> <span class="text-success small fw-semibold">READY / ACTIVE</span>` : `<span class="status-dot idle"></span> <span class="text-secondary small">IDLE</span>`;
+                const statusHtml = runsCount > 0 ? `<span class="status-dot active"></span> <span class="text-success small fw-semibold">EXECUTED (${runsCount})</span>` : `<span class="status-dot idle"></span> <span class="text-secondary small">READY</span>`;
 
                 const cardHtml = `
                     <div class="col-md-4 col-lg-3">
@@ -285,19 +285,19 @@ DASHBOARD_HTML = """<!DOCTYPE html>
                     term.innerText = data.logs.join('\\n\\n' + '-'.repeat(60) + '\\n\\n');
                 } else {
                     term.innerText = `[AUTOPOIESIS AGENT LOGS: ${currentModalAgentId}]\\n` +
-                                     `Status: IDLE / READY\\n` +
+                                     `Status: READY / WAITING FOR INVOCATION\\n` +
                                      `Registered Namespace: ${data.namespace || 'global'}\\n` +
                                      `AST Hash: ${data.ast_hash || 'N/A'}\\n` +
-                                     `No execution failures or trace snapshots recorded yet.`;
+                                     `No execution traces recorded yet.`;
                 }
             } catch (err) {
                 document.getElementById('modal-log-terminal').innerText = 'Failed to load logs: ' + err;
             }
         }
 
-        // Auto-refresh every 3 seconds
+        // Live auto-refresh every 2 seconds
         fetchDashboardData();
-        setInterval(fetchDashboardData, 3000);
+        setInterval(fetchDashboardData, 2000);
     </script>
 </body>
 </html>
