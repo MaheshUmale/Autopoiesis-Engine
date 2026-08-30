@@ -6,7 +6,7 @@ This guide explains how to initialize your workspace and configure AI coding too
 
 ## 1. Workspace Initialization
 
-Navigate to your target project folder and run:
+Navigate to your target project folder in terminal or PowerShell and run:
 
 ```bash
 autopoiesis init
@@ -28,7 +28,7 @@ This single command performs the following actions:
 
 ---
 
-## 2. IDE Integration Configurations
+## 2. IDE Integration Configurations & File Paths
 
 ### A. Local `mcp.json` (Universal Standard)
 
@@ -50,13 +50,13 @@ The `autopoiesis init` command creates `mcp.json` in your project root:
 
 ---
 
-### B. Claude Desktop
+### B. Claude Desktop Config Paths
 
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+- **Windows:** `%APPDATA%\Claude\claude_desktop_config.json` (Expanded to `C:\Users\<Username>\AppData\Roaming\Claude\claude_desktop_config.json`)
 - **Linux:** `~/.config/Claude/claude_desktop_config.json`
 
-Restart Claude Desktop after running `autopoiesis init` to activate the dynamic tools.
+Restart Claude Desktop after running `autopoiesis init` to activate the dynamic MCP tools.
 
 ---
 
