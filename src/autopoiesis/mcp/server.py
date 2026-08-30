@@ -9,7 +9,16 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from sse_starlette.sse import EventSourceResponse
 
-from mcp.server import MCPServer
+try:
+    from mcp.server import MCPServer
+except ImportError:
+    try:
+        from mcp.server.mcpserver import MCPServer
+    except ImportError:
+        try:
+            from mcp.server.fastmcp import FastMCP as MCPServer
+        except ImportError:
+            from mcp.server import Server as MCPServer
 import mcp.types as types
 
 from autopoiesis.registry.manager import RegistryManager

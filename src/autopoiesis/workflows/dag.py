@@ -102,7 +102,7 @@ class AutopoiesisDAGWorkflow:
 
                     # Route failure to Self-Healing Workflow
                     heal_res = await workflow.execute_child_workflow(
-                        SelfHealingWorkflow,
+                        SelfHealingWorkflow.run,
                         {
                             "skill_id": skill_id,
                             "error_type": extracted_type,
