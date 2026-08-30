@@ -300,21 +300,21 @@ class RegistryManager:
             )
 
     def search_skills(self, query: str, active_namespaces: List[str], limit: int = 5) -> List[Dict[str, Any]]:
-        """Searches skills by semantic similarity filtered by active_namespaces."""
+        """Searches skills by semantic similarity filtered by active_namespaces + 'global' for cross-project reusability."""
         vector = self._dummy_embedding(query)
 
-        # Build filter for namespace IN active_namespaces
-        must_conditions = []
-        if active_namespaces:
-            # Match any of active_namespaces
-            must_conditions.append(
-                Filter(
-                    should=[
-                        FieldCondition(key="namespace", match=MatchValue(value=ns))
-                        for ns in active_namespaces
-                    ]
-                )
+        # Always include 'global' namespace for universal cross-project skill reusability
+        effective_namespaces = list(set((active_namespaces or []) + ["global"]))
+
+        # Build filter for namespace IN effective_namespaces
+        must_conditions = [
+            Filter(
+                should=[
+                    FieldCondition(key="namespace", match=MatchValue(value=ns))
+                    for ns in effective_namespaces
+                ]
             )
+        ]
 
         query_filter = Filter(must=must_conditions) if must_conditions else None
 

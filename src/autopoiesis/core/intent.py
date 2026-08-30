@@ -64,9 +64,11 @@ class LookAheadParser:
     def synthesize_and_register_skill(
         self,
         step_description: str,
-        namespace: str = "variant.auto",
+        namespace: str = "global",
         root_registry_dir: str | Path = "registry"
     ) -> SkillMetadata:
+        """Autonomously synthesizes a Python micro-skill into global or variant workspace registry for reusability."""
+        scope_level = "core" if namespace == "global" else "variant"
         """Autonomously synthesizes a single-purpose Python micro-skill, verifies it in sandbox,
         saves it to workspace registry/level_2_variants/, and indexes it into Qdrant in real-time.
         """
@@ -99,7 +101,7 @@ class LookAheadParser:
         skill_meta = self.registry.register_skill(
             skill_id=skill_id,
             namespace=namespace,
-            scope_level="variant",
+            scope_level=scope_level,
             description=f"Autonomously synthesized micro-skill: {step_description}",
             inputs={"type": "object", "properties": {"payload": {}}},
             outputs={"type": "object", "properties": {"status": {"type": "string"}, "output": {}}},
