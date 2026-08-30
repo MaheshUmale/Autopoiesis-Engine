@@ -25,7 +25,7 @@ def main(inputs: dict) -> dict:
 
     assert skill1.id == "global.math.double"
 
-    # Registering duplicate AST should return same metadata via deduplication
+    # Registering duplicate AST in same namespace returns existing metadata via deduplication
     skill2 = registry.register_skill(
         skill_id="global.math.double_var",
         namespace="global",
@@ -40,25 +40,28 @@ def main(inputs: dict) -> dict:
     assert skill2.id == skill1.id
 
 
-def test_registry_vector_search(tmp_path: Path):
+def test_registry_vector_search_global_reusability(tmp_path: Path):
     base_dir = tmp_path / ".autopoiesis"
     registry = RegistryManager(base_dir=base_dir)
 
     code = "def main(inputs): return {'ok': True}"
+
+    # Register global core skill
     registry.register_skill(
-        skill_id="trading.upstox.fetch",
-        namespace="trading.broker.upstox",
-        scope_level="variant",
-        description="Fetches Upstox historical candles",
+        skill_id="global.parsers.json_parser",
+        namespace="global",
+        scope_level="core",
+        description="Parses JSON payload data",
         inputs={},
         outputs={},
         python_code=code,
         root_registry_dir=tmp_path / "registry",
     )
 
-    results = registry.search_skills("Upstox historical candles", active_namespaces=["trading.broker.upstox"])
+    # Search using a specific project namespace: 'global' skill must still be found for cross-project reusability!
+    results = registry.search_skills("Parses JSON payload data", active_namespaces=["trading.broker.upstox"])
     assert len(results) > 0
-    assert results[0]["skill"].id == "trading.upstox.fetch"
+    assert any(r["skill"].id == "global.parsers.json_parser" for r in results)
 
 
 def test_sync_delta_indexing(tmp_path: Path):

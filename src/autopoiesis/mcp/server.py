@@ -3,7 +3,7 @@ import json
 import sqlite3
 from typing import Any, Dict, List
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from sse_starlette.sse import EventSourceResponse
 
 from mcp.server import MCPServer
@@ -13,6 +13,7 @@ from autopoiesis.registry.manager import RegistryManager
 from autopoiesis.sandbox.executor import SandboxExecutor
 from autopoiesis.core.intent import LookAheadParser, ProjectConfig
 from autopoiesis.cli.init import init_workspace, PlatformAdapter
+from autopoiesis.mcp.dashboard import DASHBOARD_HTML
 
 # ANSI Color constants for visual terminal feedback
 RESET = "\033[0m"
@@ -63,9 +64,9 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
             active_namespaces=active_namespaces or ["global"],
             required_pipeline_intent=intent,
         )
-        results = parser.resolve_pipeline_intent(config)
+        results = parser.resolve_pipeline_intent(config, auto_synthesize=True)
         output_data = [res.model_dump() for res in results]
-        log_visual_activity("MCP INTENT COMPLETE", f"Resolved {len(results)} execution steps.", GREEN)
+        log_visual_activity("MCP INTENT COMPLETE", f"Resolved & synthesized {len(results)} execution steps.", GREEN)
         return json.dumps({"intent": intent, "steps": output_data}, indent=2)
 
     app_server.add_tool(
@@ -126,27 +127,114 @@ async def run_mcp_stdio_server():
 
 
 def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
-    """Creates FastAPI app for HTTP and SSE transport mode."""
+    """Creates FastAPI app for HTTP and SSE transport mode with Global Agent Dashboard UI."""
     ensure_workspace_initialized(base_dir)
     app = FastAPI(title="Autopoiesis Engine MCP Daemon")
 
     @app.get("/")
-    async def root():
-        log_visual_activity("HTTP HEALTH CHECK", "Root GET / health check received.", CYAN)
+    @app.get("/ui")
+    @app.get("/dashboard")
+    async def dashboard_ui():
+        """Serves the interactive Global Agent Dashboard UI."""
+        return HTMLResponse(content=DASHBOARD_HTML)
+
+    @app.get("/api/dashboard/agents")
+    async def api_dashboard_agents():
+        """API endpoint supplying agent stats and individual skill data for the dashboard."""
+        registry = RegistryManager(base_dir=base_dir)
+        agents = []
+        core_count = 0
+        variant_count = 0
+        template_count = 0
+
+        traces_dir = PlatformAdapter.sanitize_path(base_dir) / "traces"
+        execution_runs = len(list(traces_dir.glob("*.json"))) if traces_dir.exists() else 0
+
+        with sqlite3.connect(registry.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, namespace, scope_level, description, file_path, ast_hash FROM skills")
+            rows = cursor.fetchall()
+            for r in rows:
+                scope = r[2]
+                if scope == "core":
+                    core_count += 1
+                else:
+                    variant_count += 1
+
+                # Calculate execution count from traces
+                exec_count = 0
+                if traces_dir.exists():
+                    for t_file in traces_dir.glob("*.json"):
+                        try:
+                            t_data = json.loads(t_file.read_text(encoding="utf-8"))
+                            exec_count += sum(1 for entry in t_data if entry.get("skill_id") == r[0])
+                        except Exception:
+                            pass
+
+                agents.append({
+                    "id": r[0],
+                    "namespace": r[1],
+                    "scope_level": scope,
+                    "description": r[3],
+                    "file_path": r[4],
+                    "ast_hash": r[5],
+                    "execution_count": exec_count
+                })
+
+            cursor.execute("SELECT template_id, namespace, description FROM templates")
+            for r in cursor.fetchall():
+                template_count += 1
+                agents.append({
+                    "id": r[0],
+                    "namespace": r[1],
+                    "scope_level": "template",
+                    "description": r[2] or "Composite DAG Template",
+                    "file_path": f"registry/level_3_templates/{r[1]}/{r[0]}.json",
+                    "ast_hash": "N/A",
+                    "execution_count": 0
+                })
+
         return {
-            "name": "Autopoiesis Engine MCP Daemon",
-            "version": "0.1.0",
-            "status": "online",
-            "autopoiesis_active": True,
-            "endpoints": {
-                "list_tools": "/tools",
-                "execute_tool": "/tools/{skill_id}/execute",
-                "resources_registry": "/resources/registry",
-                "resources_history": "/resources/state/history",
-                "resources_config": "/resources/config",
-                "sse": "/sse",
-                "messages": "/messages"
-            }
+            "stats": {
+                "total": len(agents),
+                "core": core_count,
+                "variant": variant_count,
+                "templates": template_count,
+                "execution_runs": execution_runs,
+            },
+            "agents": agents
+        }
+
+    @app.get("/api/dashboard/logs/{agent_id:path}")
+    async def api_agent_logs(agent_id: str):
+        """API endpoint fetching isolated logs and traces for a specific agent/skill."""
+        registry = RegistryManager(base_dir=base_dir)
+        skill = registry.get_skill(agent_id)
+
+        traces_dir = PlatformAdapter.sanitize_path(base_dir) / "traces"
+        logs = []
+
+        if traces_dir.exists():
+            for t_file in traces_dir.glob("*.json"):
+                try:
+                    t_entries = json.loads(t_file.read_text(encoding="utf-8"))
+                    for entry in t_entries:
+                        if entry.get("skill_id") == agent_id:
+                            status_str = "SUCCESS" if entry.get("success") else f"FAIL [{entry.get('error_type')}]"
+                            log_msg = f"[{t_file.stem}] [Node: {entry.get('node_id')}] Status: {status_str} ({entry.get('execution_time_sec', 0):.3f}s)\n"
+                            if entry.get("stdout"):
+                                log_msg += f"STDOUT:\n{entry.get('stdout')}\n"
+                            if entry.get("stderr"):
+                                log_msg += f"STDERR:\n{entry.get('stderr')}\n"
+                            logs.append(log_msg)
+                except Exception:
+                    pass
+
+        return {
+            "agent_id": agent_id,
+            "namespace": skill.namespace if skill else "global",
+            "ast_hash": skill.ast_hash if skill else "N/A",
+            "logs": logs
         }
 
     @app.get("/tools")
@@ -158,7 +246,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 "id": "run_intent",
                 "namespace": "global",
                 "scope_level": "core",
-                "description": "Catch-all orchestration tool. Pass natural language instructions directly to run workflows.",
+                "description": "Catch-all orchestration tool. Pass natural language instructions directly.",
                 "inputs": {
                     "type": "object",
                     "properties": {
@@ -272,7 +360,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
                 active_namespaces=active_namespaces,
                 required_pipeline_intent=intent,
             )
-            results = parser.resolve_pipeline_intent(config)
+            results = parser.resolve_pipeline_intent(config, auto_synthesize=True)
             log_visual_activity("HTTP INTENT SUCCESS", f"Intent executed: {len(results)} steps resolved.", GREEN)
             return {"intent": intent, "steps": [r.model_dump() for r in results]}
 
