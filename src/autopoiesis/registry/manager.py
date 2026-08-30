@@ -115,13 +115,21 @@ class RegistryManager:
             )
 
     def _dummy_embedding(self, text: str) -> List[float]:
-        """Generates a deterministic vector representation for text when no LLM API is configured."""
-        sha = hashlib.sha256(text.encode("utf-8")).digest()
-        vector = []
-        for i in range(384):
-            val = (sha[i % len(sha)] / 255.0) * 2.0 - 1.0
-            vector.append(val)
-        return vector
+        """Generates a normalized deterministic vector representation using character 3-gram term frequencies."""
+        import math
+        tokens = [text[i:i+3].lower() for i in range(max(1, len(text) - 2))]
+        if not tokens:
+            tokens = [text.lower()]
+
+        vec = [0.0] * 384
+        for token in tokens:
+            idx = int(hashlib.md5(token.encode("utf-8")).hexdigest(), 16) % 384
+            vec[idx] += 1.0
+
+        norm = math.sqrt(sum(v * v for v in vec))
+        if norm > 0:
+            vec = [v / norm for v in vec]
+        return vec
 
     def sync_delta_indexing(self, root_registry_dir: str | Path = "registry") -> Dict[str, int]:
         """Scans 3-Tier Registry on disk, reconciles vectors with Qdrant, re-indexes new/modified skills, and purges deleted disk skills."""
