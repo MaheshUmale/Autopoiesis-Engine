@@ -35,6 +35,8 @@ class DAGTemplate(BaseModel):
 class RegistryManager:
     """Manages 3-Tier Registry using SQLite for relational metadata and Qdrant for vector search."""
 
+    _qdrant_instances: Dict[str, QdrantClient] = {}
+
     def __init__(self, base_dir: str | Path = ".autopoiesis"):
         self.base_dir = PlatformAdapter.sanitize_path(base_dir)
         self.base_dir.mkdir(parents=True, exist_ok=True)
@@ -75,7 +77,12 @@ class RegistryManager:
             conn.commit()
 
     def _init_qdrant(self) -> None:
-        self.qdrant = QdrantClient(path=str(self.qdrant_dir))
+        key = str(self.qdrant_dir.resolve())
+        if key in RegistryManager._qdrant_instances:
+            self.qdrant = RegistryManager._qdrant_instances[key]
+        else:
+            self.qdrant = QdrantClient(path=str(self.qdrant_dir))
+            RegistryManager._qdrant_instances[key] = self.qdrant
         # Ensure collections exist
         collections = [c.name for c in self.qdrant.get_collections().collections]
         if "skills" not in collections:
@@ -98,6 +105,83 @@ class RegistryManager:
             vector.append(val)
         return vector
 
+    def sync_delta_indexing(self, root_registry_dir: str | Path = "registry") -> Dict[str, int]:
+        """Scans 3-Tier Registry on disk, reconciles vectors with Qdrant, re-indexes new/modified skills, and purges deleted disk skills."""
+        root = PlatformAdapter.sanitize_path(root_registry_dir)
+        reindexed_count = 0
+        purged_count = 0
+
+        # 1. Scan disk for schema.json and skill.py
+        disk_skills = {}
+        for schema_path in root.glob("**/schema.json"):
+            try:
+                schema_data = json.loads(schema_path.read_text(encoding="utf-8"))
+                skill_id = schema_data.get("id")
+                skill_file = schema_path.parent / "skill.py"
+                if skill_id and skill_file.exists():
+                    disk_skills[skill_id] = (schema_data, skill_file)
+            except Exception:
+                pass
+
+        # 2. Re-index disk skills into SQLite & Qdrant if missing or modified
+        for skill_id, (schema_data, skill_file) in disk_skills.items():
+            existing = self.get_skill(skill_id)
+            code_text = skill_file.read_text(encoding="utf-8")
+            ast_hash = get_normalized_ast_hash(code_text)
+
+            if not existing or existing.ast_hash != ast_hash:
+                # Update DB and Qdrant
+                with sqlite3.connect(self.db_path) as conn:
+                    cursor = conn.cursor()
+                    cursor.execute("""
+                        INSERT OR REPLACE INTO skills (id, namespace, scope_level, description, inputs_json, outputs_json, ast_hash, file_path)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        skill_id,
+                        schema_data.get("namespace", "global"),
+                        schema_data.get("scope_level", "core"),
+                        schema_data.get("description", ""),
+                        json.dumps(schema_data.get("inputs", {})),
+                        json.dumps(schema_data.get("outputs", {})),
+                        ast_hash,
+                        str(skill_file)
+                    ))
+                    conn.commit()
+
+                # Upsert Qdrant vector
+                vector = self._dummy_embedding(f"{skill_id} {schema_data.get('namespace', '')} {schema_data.get('description', '')}")
+                point_id = int(hashlib.md5(skill_id.encode("utf-8")).hexdigest(), 16) % (2**63 - 1)
+                self.qdrant.upsert(
+                    collection_name="skills",
+                    points=[
+                        PointStruct(
+                            id=point_id,
+                            vector=vector,
+                            payload={"id": skill_id, "namespace": schema_data.get("namespace", "global"), "description": schema_data.get("description", "")}
+                        )
+                    ]
+                )
+                reindexed_count += 1
+
+        # 3. Purge skills in SQLite/Qdrant if missing on disk
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, file_path FROM skills")
+            db_rows = cursor.fetchall()
+            for row in db_rows:
+                s_id, f_path = row[0], row[1]
+                if s_id not in disk_skills or not Path(f_path).exists():
+                    cursor.execute("DELETE FROM skills WHERE id = ?", (s_id,))
+                    point_id = int(hashlib.md5(s_id.encode("utf-8")).hexdigest(), 16) % (2**63 - 1)
+                    try:
+                        self.qdrant.delete(collection_name="skills", points_selector=[point_id])
+                    except Exception:
+                        pass
+                    purged_count += 1
+            conn.commit()
+
+        return {"reindexed": reindexed_count, "purged": purged_count}
+
     def register_skill(
         self,
         skill_id: str,
@@ -112,10 +196,10 @@ class RegistryManager:
         """Registers a micro-skill in the relational DB, vector store, and 3-Tier disk registry."""
         ast_hash = get_normalized_ast_hash(python_code)
 
-        # Check for AST Hash deduplication
+        # Check for AST Hash deduplication within target namespace
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id FROM skills WHERE ast_hash = ?", (ast_hash,))
+            cursor.execute("SELECT id FROM skills WHERE ast_hash = ? AND namespace = ?", (ast_hash, namespace))
             existing = cursor.fetchone()
             if existing:
                 # Deduplication hit: return existing skill metadata

@@ -59,3 +59,25 @@ def test_registry_vector_search(tmp_path: Path):
     results = registry.search_skills("Upstox historical candles", active_namespaces=["trading.broker.upstox"])
     assert len(results) > 0
     assert results[0]["skill"].id == "trading.upstox.fetch"
+
+
+def test_sync_delta_indexing(tmp_path: Path):
+    base_dir = tmp_path / ".autopoiesis"
+    registry = RegistryManager(base_dir=base_dir)
+
+    # Register skill
+    registry.register_skill(
+        skill_id="global.file.reader",
+        namespace="global",
+        scope_level="core",
+        description="Reads file contents",
+        inputs={},
+        outputs={},
+        python_code="def main(inputs): return {'read': True}",
+        root_registry_dir=tmp_path / "registry",
+    )
+
+    res = registry.sync_delta_indexing(root_registry_dir=tmp_path / "registry")
+    assert isinstance(res, dict)
+    assert "reindexed" in res
+    assert "purged" in res

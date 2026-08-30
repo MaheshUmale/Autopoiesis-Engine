@@ -53,10 +53,10 @@ def update_mcp_config_file(config_path: Path, server_cmd: str = "autopoiesis") -
 
 
 def populate_seed_skills(base_dir: Path, root_registry_dir: Path) -> None:
-    """Populates Level 1 Core primitive micro-skills into SQLite and Qdrant databases."""
+    """Populates Level 1 OS Core Base Pack primitive micro-skills into SQLite and Qdrant databases."""
     registry = RegistryManager(base_dir=base_dir)
 
-    # Seed 1: JSON Transformer & Double Parser
+    # Seed 1: JSON Parser & Transformer
     json_parser_code = """def main(inputs: dict) -> dict:
     \"\"\"Parses JSON input data and doubles the value field.\"\"\"
     data = inputs.get("data", {})
@@ -103,6 +103,116 @@ def populate_seed_skills(base_dir: Path, root_registry_dir: Path) -> None:
         root_registry_dir=root_registry_dir,
     )
 
+    # Seed 3: File Reader
+    file_reader_code = """def main(inputs: dict) -> dict:
+    \"\"\"Reads file contents as text or JSON object.\"\"\"
+    filepath = inputs.get("filepath", "")
+    from pathlib import Path
+    import json
+    p = Path(filepath)
+    if not p.exists():
+        raise FileNotFoundError(f"File not found: {filepath}")
+    raw_text = p.read_text(encoding="utf-8")
+    try:
+        data = json.loads(raw_text)
+        return {"status": "success", "filepath": str(p.resolve()), "content": data, "format": "json"}
+    except Exception:
+        return {"status": "success", "filepath": str(p.resolve()), "content": raw_text, "format": "text"}
+"""
+    registry.register_skill(
+        skill_id="global.file.reader",
+        namespace="global",
+        scope_level="core",
+        description="Reads file contents from disk returning formatted text or JSON objects.",
+        inputs={"type": "object", "properties": {"filepath": {"type": "string"}}, "required": ["filepath"]},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "content": {}, "format": {"type": "string"}}},
+        python_code=file_reader_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # Seed 4: Directory Lister
+    file_lister_code = """def main(inputs: dict) -> dict:
+    \"\"\"Lists directory contents and metadata tree.\"\"\"
+    dirpath = inputs.get("dirpath", ".")
+    from pathlib import Path
+    p = Path(dirpath)
+    if not p.exists():
+        raise FileNotFoundError(f"Directory not found: {dirpath}")
+    items = []
+    for item in p.iterdir():
+        items.append({
+            "name": item.name,
+            "is_dir": item.is_dir(),
+            "size_bytes": item.stat().st_size if item.is_file() else 0
+        })
+    return {"status": "success", "dirpath": str(p.resolve()), "items": items}
+"""
+    registry.register_skill(
+        skill_id="global.file.lister",
+        namespace="global",
+        scope_level="core",
+        description="Lists directory items, sizes, and file metadata.",
+        inputs={"type": "object", "properties": {"dirpath": {"type": "string"}}},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "items": {"type": "array"}}},
+        python_code=file_lister_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # Seed 5: Platform Shell Executor
+    shell_exec_code = """def main(inputs: dict) -> dict:
+    \"\"\"Safely executes system command using PlatformAdapter.\"\"\"
+    cmd = inputs.get("command", "")
+    from autopoiesis.core.platform import PlatformAdapter
+    proc = PlatformAdapter.run_command(cmd)
+    return {
+        "status": "success" if proc.returncode == 0 else "error",
+        "returncode": proc.returncode,
+        "stdout": proc.stdout,
+        "stderr": proc.stderr
+    }
+"""
+    registry.register_skill(
+        skill_id="global.shell.executor",
+        namespace="global",
+        scope_level="core",
+        description="Executes system shell commands safely using cross-platform PlatformAdapter.",
+        inputs={"type": "object", "properties": {"command": {"type": "string"}}, "required": ["command"]},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "stdout": {"type": "string"}, "stderr": {"type": "string"}}},
+        python_code=shell_exec_code,
+        root_registry_dir=root_registry_dir,
+    )
+
+    # Seed 6: Parquet Data Converter
+    parquet_code = """def main(inputs: dict) -> dict:
+    \"\"\"Converts structured dictionary or JSON data into a Parquet binary file.\"\"\"
+    data = inputs.get("data", {})
+    output_path = inputs.get("output_path", "data.parquet")
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+    import json
+    from pathlib import Path
+
+    raw_json = json.dumps(data)
+    schema = pa.schema([('data', pa.string())])
+    table = pa.Table.from_batches([
+        pa.RecordBatch.from_arrays([pa.array([raw_json])], schema=schema)
+    ])
+    p = Path(output_path)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    pq.write_table(table, str(p))
+    return {"status": "success", "parquet_path": str(p.resolve())}
+"""
+    registry.register_skill(
+        skill_id="global.data.parquet_converter",
+        namespace="global",
+        scope_level="core",
+        description="Converts structured dictionary payloads into Parquet columnar binary files.",
+        inputs={"type": "object", "properties": {"data": {}, "output_path": {"type": "string"}}, "required": ["data"]},
+        outputs={"type": "object", "properties": {"status": {"type": "string"}, "parquet_path": {"type": "string"}}},
+        python_code=parquet_code,
+        root_registry_dir=root_registry_dir,
+    )
+
 
 def init_workspace(project_dir: str | Path = ".") -> Dict[str, Any]:
     """Initializes workspace structure and generates valid mcp.json configurations."""
@@ -117,7 +227,7 @@ def init_workspace(project_dir: str | Path = ".") -> Dict[str, Any]:
     (root_registry_dir / "level_2_variants").mkdir(parents=True, exist_ok=True)
     (root_registry_dir / "level_3_templates").mkdir(parents=True, exist_ok=True)
 
-    # Populate seed Level 1 Core primitive micro-skills
+    # Populate seed Level 1 OS Core Base Pack micro-skills
     populate_seed_skills(base_dir=base_dir, root_registry_dir=root_registry_dir)
 
     # Inject mcp configuration into local .mcp.json and client paths

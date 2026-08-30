@@ -73,32 +73,40 @@ class AutopoiesisDAGWorkflow:
                 node_id=node_id,
             )
 
-            # Execute activity with Temporal RetryPolicy
-            try:
-                output = await workflow.execute_activity(
-                    execute_micro_skill_activity,
-                    exec_params,
-                    start_to_close_timeout=timedelta(minutes=5),
-                    retry_policy=RetryPolicy(
-                        initial_interval=timedelta(seconds=1),
-                        maximum_interval=timedelta(seconds=10),
-                        maximum_attempts=3,
-                    ),
-                )
-                node_outputs[node_id] = output
-            except Exception as e:
-                # Route failure to Self-Healing Workflow
-                heal_res = await workflow.execute_child_workflow(
-                    SelfHealingWorkflow.run,
-                    {
-                        "skill_id": skill_id,
-                        "error_type": "LogicError",
-                        "stderr": str(e),
-                        "retry_count": 0,
-                    },
-                    id=f"heal_{execution_id}_{node_id}",
-                )
-                raise RuntimeError(f"DAG execution failed at node '{node_id}' ({skill_id}): {e}. Healing result: {heal_res}")
+            # Execute activity with Self-Healing Loop up to 3 attempts
+            executed_successfully = False
+            for retry_count in range(3):
+                try:
+                    output = await workflow.execute_activity(
+                        execute_micro_skill_activity,
+                        exec_params,
+                        start_to_close_timeout=timedelta(minutes=5),
+                        retry_policy=RetryPolicy(
+                            initial_interval=timedelta(seconds=1),
+                            maximum_interval=timedelta(seconds=5),
+                            maximum_attempts=1,
+                        ),
+                    )
+                    node_outputs[node_id] = output
+                    executed_successfully = True
+                    break
+                except Exception as e:
+                    # Route failure to Self-Healing Workflow
+                    heal_res = await workflow.execute_child_workflow(
+                        SelfHealingWorkflow.run,
+                        {
+                            "skill_id": skill_id,
+                            "error_type": "LogicError",
+                            "stderr": str(e),
+                            "retry_count": retry_count,
+                        },
+                        id=f"heal_{execution_id}_{node_id}_{retry_count}",
+                    )
+                    if heal_res.get("action") != "patched" or retry_count == 2:
+                        raise RuntimeError(f"DAG execution failed at node '{node_id}' ({skill_id}): {e}. Healing result: {heal_res}")
+
+            if not executed_successfully:
+                raise RuntimeError(f"Node '{node_id}' ({skill_id}) failed after max self-healing retries.")
 
         return node_outputs
 

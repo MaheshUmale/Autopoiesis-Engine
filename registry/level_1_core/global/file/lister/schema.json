@@ -1,0 +1,28 @@
+{
+  "id": "global.file.lister",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Lists directory items, sizes, and file metadata.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "dirpath": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "items": {
+        "type": "array"
+      }
+    }
+  },
+  "ast_hash": "c5335b0712167f9e34eae908a8cd45e0a53dd38a1856ec45342ab60081b48156",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/global/file/lister/skill.py"
+}
