@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "autopoiesis-engine": {
-      "command": "autopoiesis",
+      "command": "/home/jules/.pyenv/versions/3.12.13/bin/autopoiesis",
       "args": [
         "serve",
         "--mode",

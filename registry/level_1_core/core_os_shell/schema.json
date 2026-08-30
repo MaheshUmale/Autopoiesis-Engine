@@ -1,0 +1,34 @@
+{
+  "id": "core_os_shell",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Executes native shell commands safely via PlatformAdapter (pwsh on Windows, /bin/bash on Unix).",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "command": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "command"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "stdout": {
+        "type": "string"
+      },
+      "stderr": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "19fe44852258e2b412ac07fcf3718359f5732683a75d9354812e1a296088e011",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/core_os_shell/skill.py"
+}
