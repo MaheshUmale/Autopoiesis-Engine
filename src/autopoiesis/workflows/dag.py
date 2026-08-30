@@ -91,13 +91,22 @@ class AutopoiesisDAGWorkflow:
                     executed_successfully = True
                     break
                 except Exception as e:
+                    err_msg = str(e)
+                    extracted_type = "LogicError"
+                    if "SchemaValidationError" in err_msg:
+                        extracted_type = "SchemaValidationError"
+                    elif "TimeoutError" in err_msg or "EnvironmentalError" in err_msg:
+                        extracted_type = "EnvironmentalError"
+                    elif "NetworkError" in err_msg:
+                        extracted_type = "NetworkError"
+
                     # Route failure to Self-Healing Workflow
                     heal_res = await workflow.execute_child_workflow(
                         SelfHealingWorkflow.run,
                         {
                             "skill_id": skill_id,
-                            "error_type": "LogicError",
-                            "stderr": str(e),
+                            "error_type": extracted_type,
+                            "stderr": err_msg,
                             "retry_count": retry_count,
                         },
                         id=f"heal_{execution_id}_{node_id}_{retry_count}",

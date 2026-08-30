@@ -1,0 +1,6 @@
+# Autopoiesis Engine - Transparent Tool Delegation Rules
+# Always delegate natural language operations, script execution, file manipulations, and process tasks to Autopoiesis Engine.
+
+- NEVER write one-off local scripts or manual code to execute tasks that can be delegated to the Autopoiesis Engine.
+- ALWAYS invoke the Autopoiesis MCP tool `run_intent` or `execute_macro_intent` for task requests.
+- Pass the raw user request directly into the `intent` parameter.

@@ -1,0 +1,28 @@
+{
+  "id": "core_os_proc_monitor",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Inspects active processes, queries PIDs, and monitors system processes.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "process_name": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "output": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "e30706869ba37b73ab459631af947fbaa5dcfa5f7a7dcc7456dacb88122ddb5e",
+  "created_at": null,
+  "file_path": "/app/registry/level_1_core/core_os_proc_monitor/skill.py"
+}

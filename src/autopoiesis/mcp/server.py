@@ -53,9 +53,9 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
     def get_registry():
         return RegistryManager(base_dir=base_dir)
 
-    # Register primary project orchestrator tool: execute_macro_intent
-    async def execute_macro_intent_handler(intent: str, active_namespaces: List[str] = None) -> str:
-        log_visual_activity("MCP AGENT ENGAGED", f"Executing macro intent: '{intent}'", MAGENTA)
+    # Register primary project orchestrator tool: run_intent / execute_macro_intent
+    async def run_intent_handler(intent: str, active_namespaces: List[str] = None) -> str:
+        log_visual_activity("MCP AGENT ENGAGED", f"Executing intent: '{intent}'", MAGENTA)
         reg = get_registry()
         parser = LookAheadParser(reg)
         config = ProjectConfig(
@@ -69,7 +69,13 @@ def create_mcp_server(base_dir: str = ".autopoiesis") -> MCPServer:
         return json.dumps({"intent": intent, "steps": output_data}, indent=2)
 
     app_server.add_tool(
-        fn=execute_macro_intent_handler,
+        fn=run_intent_handler,
+        name="run_intent",
+        description="Catch-all orchestration tool. Call this tool with raw user instructions to execute natural language tasks, scripts, and workflows automatically.",
+    )
+
+    app_server.add_tool(
+        fn=run_intent_handler,
         name="execute_macro_intent",
         description="Primary project orchestrator tool for end-to-end intent processing and resolution.",
     )
@@ -148,6 +154,20 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
         log_visual_activity("MCP HANDSHAKE", "AI Agent listed available tools.", CYAN)
         registry = RegistryManager(base_dir=base_dir)
         tools = [
+            {
+                "id": "run_intent",
+                "namespace": "global",
+                "scope_level": "core",
+                "description": "Catch-all orchestration tool. Pass natural language instructions directly to run workflows.",
+                "inputs": {
+                    "type": "object",
+                    "properties": {
+                        "intent": {"type": "string"},
+                        "active_namespaces": {"type": "array", "items": {"type": "string"}}
+                    },
+                    "required": ["intent"]
+                }
+            },
             {
                 "id": "execute_macro_intent",
                 "namespace": "global",
@@ -243,7 +263,7 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
 
         log_visual_activity("HTTP TOOL CALL", f"AI Agent requested execution of '{skill_id}'", MAGENTA)
 
-        if skill_id == "execute_macro_intent":
+        if skill_id in ("run_intent", "execute_macro_intent"):
             intent = payload.get("intent", "")
             active_namespaces = payload.get("active_namespaces", ["global"])
             parser = LookAheadParser(registry)
@@ -308,6 +328,11 @@ def create_fastapi_app(base_dir: str = ".autopoiesis") -> FastAPI:
             log_visual_activity("MCP SSE HANDSHAKE", "Received tools/list request via SSE messages.", CYAN)
             registry = RegistryManager(base_dir=base_dir)
             tools = [
+                {
+                    "name": "run_intent",
+                    "description": "Catch-all orchestration tool. Pass natural language instructions directly.",
+                    "inputSchema": {"type": "object", "properties": {"intent": {"type": "string"}}, "required": ["intent"]}
+                },
                 {
                     "name": "execute_macro_intent",
                     "description": "Primary project orchestrator tool for end-to-end intent processing.",

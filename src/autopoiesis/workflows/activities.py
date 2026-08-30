@@ -104,6 +104,7 @@ async def execute_micro_skill_activity(params: ExecuteSkillParams) -> Dict[str, 
 @activity.defn(name="heal_skill_activity")
 async def heal_skill_activity(params: HealSkillParams) -> Dict[str, Any]:
     """Temporal activity to execute Diagnostic Decision Tree healing logic."""
+    base_dir = Path(params.base_dir or ".autopoiesis")
     with tracer.start_as_current_span(f"heal_skill:{params.skill_id}") as span:
         span.set_attribute("skill.id", params.skill_id)
         span.set_attribute("error.type", params.error_type)
@@ -112,25 +113,39 @@ async def heal_skill_activity(params: HealSkillParams) -> Dict[str, Any]:
         if params.retry_count >= 3:
             raise RuntimeError(f"Max heal retries (3) exceeded for skill '{params.skill_id}'. Aborting.")
 
-        patched_code = params.python_code
+        registry = RegistryManager(base_dir=base_dir)
+        skill_meta = registry.get_skill(params.skill_id)
+        code_to_patch = params.python_code or (Path(skill_meta.file_path).read_text(encoding="utf-8") if skill_meta and skill_meta.file_path and Path(skill_meta.file_path).exists() else "")
+
+        patched_code = code_to_patch
 
         # Diagnostic Decision Tree logic
         if params.error_type == "SchemaValidationError":
-            # Issue is upstream node payload schema - do not patch current skill
             return {
                 "action": "upstream_repair_required",
-                "patched_code": params.python_code,
+                "patched_code": code_to_patch,
                 "message": "Input validation failed. Upstream node output must be repaired."
             }
-        elif params.error_type == "EnvironmentalError" or params.error_type == "TimeoutError":
-            # Sandbox Pass -> Live Fail (Timeout/OOM) => Auto-patch for streaming/chunking
+        elif params.error_type in ("EnvironmentalError", "TimeoutError"):
             patched_code += "\n# Auto-patched: added memory chunking / buffer flush\n"
         elif params.error_type == "NetworkError":
-            # Network failure -> Auto-patch with exponential backoff / retry
-            patched_code = "import time\n" + patched_code
-        elif params.error_type == "LogicError":
-            # Logic/Syntax error -> Attempt hotfix patch
+            if "import time" not in patched_code:
+                patched_code = "import time\n" + patched_code
+        else:
             patched_code += "\n# Auto-patched: logic hotfix\n"
+
+        # Save patched code back to skill file in registry
+        if skill_meta and skill_meta.file_path:
+            Path(skill_meta.file_path).write_text(patched_code, encoding="utf-8")
+            registry.register_skill(
+                skill_id=skill_meta.id,
+                namespace=skill_meta.namespace,
+                scope_level=skill_meta.scope_level,
+                description=skill_meta.description,
+                inputs=skill_meta.inputs,
+                outputs=skill_meta.outputs,
+                python_code=patched_code,
+            )
 
         return {
             "action": "patched",
