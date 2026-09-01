@@ -1,0 +1,37 @@
+{
+  "manifest_version": "1.0",
+  "project": "my-amf-project",
+  "workflow_id": "example_workflow",
+  "namespace": "global",
+  "description": "Example AMF workflow DAG template",
+  "parameters": {
+    "input_data": {},
+    "threshold": 0.85
+  },
+  "nodes": [
+    {
+      "node_id": "step_1",
+      "agent_id": "example_agent",
+      "capability": "example_capability",
+      "inputs": {
+        "data": "{{ parameters.input_data }}"
+      },
+      "timeout_sec": 60.0
+    },
+    {
+      "node_id": "step_2",
+      "agent_id": "example_agent",
+      "capability": "example_capability",
+      "inputs": {
+        "data": "{{ step_1.output }}"
+      },
+      "timeout_sec": 60.0
+    }
+  ],
+  "edges": [
+    {
+      "source": "step_1",
+      "target": "step_2"
+    }
+  ]
+}

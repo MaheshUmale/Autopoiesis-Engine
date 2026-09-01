@@ -1,0 +1,34 @@
+{
+  "id": "core_file_watcher",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Lists files in a directory with metadata and pattern filtering.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "dir_path": {
+        "type": "string"
+      },
+      "pattern": {
+        "type": "string"
+      },
+      "recursive": {
+        "type": "boolean"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "files": {
+        "type": "array"
+      }
+    }
+  },
+  "ast_hash": "4273acde95759ea7b2cb0496d5ddf55abf218996fb8d7e67dc48be8700dbe84d",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_file_watcher\\skill.py"
+}

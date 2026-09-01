@@ -1,0 +1,38 @@
+{
+  "template_id": "trading.simple_pipeline",
+  "namespace": "trading",
+  "description": "Simple trading pipeline: fetch data -> parse -> double values -> save results.",
+  "parameters": {
+    "symbol": {"type": "string", "default": "RELIANCE"},
+    "output_file": {"type": "string", "default": "results.json"}
+  },
+  "dag": {
+    "nodes": [
+      {
+        "node_id": "fetch",
+        "agent_id": "market_data_fetcher",
+        "capability": "fetch_ohlcv",
+        "inputs": {"symbol": "{{ parameters.symbol }}", "limit": 100},
+        "timeout_sec": 30.0
+      },
+      {
+        "node_id": "process",
+        "agent_id": "data_processor",
+        "capability": "double_values",
+        "inputs": {"data": "{{ fetch.output }}"},
+        "timeout_sec": 10.0
+      },
+      {
+        "node_id": "save",
+        "agent_id": "storage_writer",
+        "capability": "save_json",
+        "inputs": {"data": "{{ process.output }}", "file_path": "{{ parameters.output_file }}"},
+        "timeout_sec": 10.0
+      }
+    ],
+    "edges": [
+      {"source": "fetch", "target": "process"},
+      {"source": "process", "target": "save"}
+    ]
+  }
+}

@@ -1,0 +1,4 @@
+service:
+  http_port: 6333
+storage:
+  storage_path: D:/Autopoiesis-Engine/.autopoiesis/qdrant/storage

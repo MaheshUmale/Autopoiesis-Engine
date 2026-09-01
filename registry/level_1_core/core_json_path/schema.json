@@ -1,0 +1,30 @@
+{
+  "id": "core_json_path",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Query JSON documents with dot-path expressions.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "data": {},
+      "query": {
+        "type": "string"
+      }
+    },
+    "required": [
+      "query"
+    ]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "result": {}
+    }
+  },
+  "ast_hash": "68c7aec7439f1f3a6c6ec7a3fd143bb66f185ba393b6a1b0a473cba38546497f",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_json_path\\skill.py"
+}

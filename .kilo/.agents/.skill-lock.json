@@ -1,0 +1,314 @@
+{
+  "version": 3,
+  "skills": {
+    "google-agents-cli-adk-code": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-adk-code/SKILL.md",
+      "skillFolderHash": "509bf9b98e265d48296504a1f7ff47c49f07d847",
+      "installedAt": "2026-06-17T14:22:39.088Z",
+      "updatedAt": "2026-06-23T11:36:24.548Z"
+    },
+    "google-agents-cli-deploy": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-deploy/SKILL.md",
+      "skillFolderHash": "76e53c9d1b19878043c3772829f90a722b8e31e0",
+      "installedAt": "2026-06-17T14:22:39.933Z",
+      "updatedAt": "2026-06-23T11:36:25.493Z"
+    },
+    "google-agents-cli-eval": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-eval/SKILL.md",
+      "skillFolderHash": "5cdf3d289e298a2a632f696111a06079dee16191",
+      "installedAt": "2026-06-17T14:22:40.562Z",
+      "updatedAt": "2026-06-23T11:36:26.358Z"
+    },
+    "google-agents-cli-observability": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-observability/SKILL.md",
+      "skillFolderHash": "07aec3d25d1dc3ed02bc5332269321f2ba4a76e8",
+      "installedAt": "2026-06-17T14:22:41.364Z",
+      "updatedAt": "2026-06-23T11:36:27.140Z"
+    },
+    "google-agents-cli-publish": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-publish/SKILL.md",
+      "skillFolderHash": "c0a6f013df577e8f8f5090873af623a32dbcc323",
+      "installedAt": "2026-06-17T14:22:41.972Z",
+      "updatedAt": "2026-06-23T11:36:27.880Z"
+    },
+    "google-agents-cli-scaffold": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-scaffold/SKILL.md",
+      "skillFolderHash": "a30ed71f99d3961d7fa4df02dd42c9d3e0f2f18c",
+      "installedAt": "2026-06-17T14:22:42.611Z",
+      "updatedAt": "2026-06-23T11:36:28.710Z"
+    },
+    "google-agents-cli-workflow": {
+      "source": "google/agents-cli",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/google-agents-cli-workflow/SKILL.md",
+      "skillFolderHash": "ff080c78e98517af44cdd5b55fe5c12c62fb230f",
+      "installedAt": "2026-06-17T14:22:43.396Z",
+      "updatedAt": "2026-06-23T11:36:29.380Z"
+    },
+    "git-workflow": {
+      "source": "google/agents-cli",
+      "sourceUrl": "https://github.com/google/agents-cli.git",
+      "skillPath": "skills/git-workflow/SKILL.md",
+      "installedAt": "2026-06-17T14:22:43.396Z",
+      "updatedAt": "2026-06-17T14:44:52.649Z"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/skills.git",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "skillFolderHash": "76a98a285cb0434f3d39e1a873823556330e398b",
+      "installedAt": "2026-08-22T17:15:37.083Z",
+      "updatedAt": "2026-08-22T17:15:44.857Z"
+    },
+    "agent-browser": {
+      "source": "vercel-labs/agent-browser",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-browser.git",
+      "skillPath": "skills/agent-browser/SKILL.md",
+      "skillFolderHash": "037e8078db4b20b4aa25c04f21c6de7d335ec449",
+      "installedAt": "2026-08-22T17:16:28.847Z",
+      "updatedAt": "2026-08-22T17:16:28.847Z"
+    },
+    "browser-act-skill-forge": {
+      "source": "browser-act/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/browser-act/skills.git",
+      "skillPath": "browser-act-skill-forge/SKILL.md",
+      "skillFolderHash": "2862368d2e739566c06a798330520b348fdbe8fd",
+      "installedAt": "2026-08-25T18:44:04.314Z",
+      "updatedAt": "2026-08-25T18:44:04.314Z"
+    },
+    "browser-act": {
+      "source": "browser-act/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/browser-act/skills.git",
+      "skillPath": "browser-act/SKILL.md",
+      "skillFolderHash": "fa4f5a3b13b847d22e01c1c8a34d5f2e85402620",
+      "installedAt": "2026-08-25T18:44:51.637Z",
+      "updatedAt": "2026-08-25T18:50:44.415Z"
+    },
+    "web-design-guidelines": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/vercel-labs/agent-skills.git",
+      "skillPath": "skills/web-design-guidelines/SKILL.md",
+      "skillFolderHash": "3116f3e62dbd02b44a598b1aa690d2a8938e8f89",
+      "installedAt": "2026-08-27T13:38:50.862Z",
+      "updatedAt": "2026-08-27T13:38:50.862Z"
+    },
+    "desktop-commander-overview": {
+      "source": "cline/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/cline/skills.git",
+      "skillPath": "skills/desktop-commander-overview/SKILL.md",
+      "skillFolderHash": "6497b8a36d620325f4c469f12048ac742a9d2347",
+      "installedAt": "2026-08-27T13:39:08.631Z",
+      "updatedAt": "2026-08-27T13:39:08.631Z"
+    },
+    "skill-creator": {
+      "source": "cline/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/cline/skills.git",
+      "skillPath": "skills/skill-creator/SKILL.md",
+      "skillFolderHash": "2d75bb14c452d79d9b4bc12d67f5e663c31afea5",
+      "installedAt": "2026-08-27T13:39:11.179Z",
+      "updatedAt": "2026-08-27T13:39:11.179Z"
+    },
+    "frontend-design": {
+      "source": "cline/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/cline/skills.git",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "skillFolderHash": "7dec82e650e900956b272b4a846dfb4ccebb1941",
+      "installedAt": "2026-08-27T13:39:32.697Z",
+      "updatedAt": "2026-08-27T13:39:32.697Z"
+    },
+    "site-specification": {
+      "source": "cline/skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/cline/skills.git",
+      "skillPath": "skills/site-specification/SKILL.md",
+      "skillFolderHash": "451207868ffa5313916387cb008a0f6e3468b882",
+      "installedAt": "2026-08-27T13:39:37.583Z",
+      "updatedAt": "2026-08-27T13:39:37.583Z"
+    },
+    "custom-indicator": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/custom-indicator/SKILL.md",
+      "skillFolderHash": "ec6f4603a6bf180658390eead8b56278afd67268",
+      "installedAt": "2026-08-28T09:25:47.994Z",
+      "updatedAt": "2026-08-30T08:30:38.545Z"
+    },
+    "indicator-chart": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/indicator-chart/SKILL.md",
+      "skillFolderHash": "418c26d5af2595fb006c8689d9f329ef84e53300",
+      "installedAt": "2026-08-28T09:25:48.022Z",
+      "updatedAt": "2026-08-30T08:30:38.572Z"
+    },
+    "indicator-dashboard": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/indicator-dashboard/SKILL.md",
+      "skillFolderHash": "a26a2b95eb90663e1d0b185f4904a8ca8f246f96",
+      "installedAt": "2026-08-28T09:25:48.046Z",
+      "updatedAt": "2026-08-30T08:30:38.599Z"
+    },
+    "indicator-expert": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/indicator-expert/SKILL.md",
+      "skillFolderHash": "fe2abf7e30b931842686483fad37eac69306a079",
+      "installedAt": "2026-08-28T09:25:48.074Z",
+      "updatedAt": "2026-08-30T08:30:38.626Z"
+    },
+    "indicator-scanner": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/indicator-scanner/SKILL.md",
+      "skillFolderHash": "fe6c105b23f6f0e1bc2650535ae6dfec6a73dd63",
+      "installedAt": "2026-08-28T09:25:48.099Z",
+      "updatedAt": "2026-08-30T08:30:38.652Z"
+    },
+    "indicator-setup": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/indicator-setup/SKILL.md",
+      "skillFolderHash": "bb7f8ca8ad6898449c4f50d6da7c2951d3e83104",
+      "installedAt": "2026-08-28T09:25:48.121Z",
+      "updatedAt": "2026-08-30T08:30:38.700Z"
+    },
+    "live-feed": {
+      "source": "marketcalls/openalgo-indicator-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-indicator-skills.git",
+      "skillPath": ".claude/skills/live-feed/SKILL.md",
+      "skillFolderHash": "77264a7ad6ebe7e0ff2f5d03a96c3d55aefc6e4b",
+      "installedAt": "2026-08-28T09:25:48.148Z",
+      "updatedAt": "2026-08-30T08:30:38.733Z"
+    },
+    "openalgo": {
+      "source": "marketcalls/openalgo-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/marketcalls/openalgo-skills.git",
+      "skillPath": "skills/openalgo/SKILL.md",
+      "skillFolderHash": "e9008d9c19132cb6701d0153824c53e1c2fe67a6",
+      "installedAt": "2026-08-30T08:30:01.540Z",
+      "updatedAt": "2026-08-30T08:30:01.540Z"
+    },
+    "upstox": {
+      "source": "upstox/upstox-skills",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/upstox/upstox-skills.git",
+      "skillPath": "skills/upstox/SKILL.md",
+      "skillFolderHash": "2cc919eb6d6e41444d0a90c5dc6967c85540934b",
+      "installedAt": "2026-08-30T08:30:56.401Z",
+      "updatedAt": "2026-08-30T08:32:12.769Z"
+    },
+    "ponytail": {
+      "source": "dietrichgebert/ponytail",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dietrichgebert/ponytail.git",
+      "skillPath": "skills/ponytail/SKILL.md",
+      "skillFolderHash": "cb6e53477eaf04e6daeca22feacb85f9ce20d40c",
+      "installedAt": "2026-08-30T08:34:19.250Z",
+      "updatedAt": "2026-08-30T08:34:19.250Z"
+    },
+    "ponytail-audit": {
+      "source": "dietrichgebert/ponytail",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dietrichgebert/ponytail.git",
+      "skillPath": "skills/ponytail-audit/SKILL.md",
+      "skillFolderHash": "19744a9490abb0f5d0f18c6e39e3a3eb50f4daa1",
+      "installedAt": "2026-08-30T08:34:19.284Z",
+      "updatedAt": "2026-08-30T08:34:19.284Z"
+    },
+    "ponytail-debt": {
+      "source": "dietrichgebert/ponytail",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dietrichgebert/ponytail.git",
+      "skillPath": "skills/ponytail-debt/SKILL.md",
+      "skillFolderHash": "fe9ea82cad2b42a9c244acc275c9091c414ff528",
+      "installedAt": "2026-08-30T08:34:19.314Z",
+      "updatedAt": "2026-08-30T08:34:19.314Z"
+    },
+    "ponytail-gain": {
+      "source": "dietrichgebert/ponytail",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dietrichgebert/ponytail.git",
+      "skillPath": "skills/ponytail-gain/SKILL.md",
+      "skillFolderHash": "13724e1903f76456164f00ec2a3074848433588f",
+      "installedAt": "2026-08-30T08:34:19.338Z",
+      "updatedAt": "2026-08-30T08:34:19.338Z"
+    },
+    "ponytail-help": {
+      "source": "dietrichgebert/ponytail",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dietrichgebert/ponytail.git",
+      "skillPath": "skills/ponytail-help/SKILL.md",
+      "skillFolderHash": "b7df7bc32b6e4e8bbde8acb2ef3c97ee7e7638f7",
+      "installedAt": "2026-08-30T08:34:19.363Z",
+      "updatedAt": "2026-08-30T08:34:19.363Z"
+    },
+    "ponytail-review": {
+      "source": "dietrichgebert/ponytail",
+      "sourceType": "github",
+      "sourceUrl": "https://github.com/dietrichgebert/ponytail.git",
+      "skillPath": "skills/ponytail-review/SKILL.md",
+      "skillFolderHash": "dc6d9660c4297496a9220de377f6f7df38ab1a53",
+      "installedAt": "2026-08-30T08:34:19.391Z",
+      "updatedAt": "2026-08-30T08:34:19.391Z"
+    }
+  },
+  "dismissed": {
+    "findSkillsPrompt": true
+  },
+  "lastSelectedAgents": [
+    "amp",
+    "antigravity",
+    "antigravity-cli",
+    "cline",
+    "codex",
+    "cursor",
+    "deepagents",
+    "gemini-cli",
+    "github-copilot",
+    "kimi-code-cli",
+    "opencode",
+    "warp",
+    "zed",
+    "kilo",
+    "claude-code",
+    "kimchi",
+    "kiro-cli",
+    "zcode"
+  ]
+}

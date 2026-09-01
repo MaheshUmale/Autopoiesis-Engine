@@ -1,0 +1,43 @@
+{
+  "id": "global.skill_smith",
+  "namespace": "global",
+  "scope_level": "genesis",
+  "description": "Genesis meta-skill that forges new micro-skills from first-principles structured specifications. Generates conformant skill.py code from SkillSpecification intents.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "specification": {
+        "type": "object",
+        "description": "Structured SkillSpecification describing the skill to forge.",
+        "properties": {
+          "description": {"type": "string"},
+          "inputs": {"type": "object"},
+          "outputs": {"type": "object"},
+          "behavior": {
+            "type": "object",
+            "properties": {
+              "type": {"type": "string", "enum": ["transform", "filter", "aggregate", "io", "compute", "custom"]},
+              "logic": {"type": "string"},
+              "dependencies": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        },
+        "required": ["description", "inputs", "outputs", "behavior"]
+      }
+    },
+    "required": ["specification"]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {"type": "string"},
+      "skill_id": {"type": "string"},
+      "generated_code": {"type": "string"},
+      "ast_hash": {"type": "string"},
+      "validation": {"type": "object"}
+    }
+  },
+  "ast_hash": "replace_after_first_run",
+  "created_at": null,
+  "file_path": "registry/level_0_genesiss/global/skill_smith/skill.py"
+}

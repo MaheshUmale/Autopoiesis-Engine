@@ -1,0 +1,43 @@
+# AMF Agent Manifest Template
+# Copy this file to create a new agent definition
+# Validate with: autopoiesis amf register <manifest_path>
+
+manifest_version: "1.0"
+project: my-amf-project
+
+agents:
+  - agent_id: example_agent
+    namespace: global
+    version: 1.0.0
+    description: "Example AMF agent template - replace with your agent definition"
+    capabilities:
+      - name: example_capability
+        skill_id: core_data_utilities
+        inputs:
+          type: object
+          properties:
+            data:
+              type: object
+              description: "Input data for the capability"
+        outputs:
+          type: object
+          properties:
+            status:
+              type: string
+              description: "Execution status"
+        timeout_sec: 30.0
+        retry_policy:
+          max_attempts: 3
+          initial_interval_sec: 1.0
+          max_interval_sec: 5.0
+    dependencies:
+      - type: skill
+        name: core_data_utilities
+        required: true
+    metadata:
+      owner: amf_user
+      tags: []
+    lifecycle_hooks:
+      on_start: []
+      on_stop: []
+      on_error: heal_and_retry

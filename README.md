@@ -20,7 +20,7 @@ chmod +x install.sh && ./install.sh
 
 ### Direct Install from GitHub (Any OS):
 ```powershell
-pip install git+https://github.com/autopoiesis/autopoiesis-engine.git
+pip install git+https://github.com/MaheshUmale/autopoiesis-engine.git
 autopoiesis init
 ```
 
@@ -76,7 +76,57 @@ To view all active agents, execution statistics, and real-time logs in your web 
 
 ## 📚 Detailed Documentation
 
+- **[Project Status & Achievements](PROJECT_STATUS.md)** — Comprehensive summary of all completed work
 - **[Installation & Reinstallation Guide](INSTALLATION.md)**
 - **[IDE Setup & Verification Guide](SETUP_GUIDE.md)**
 - **[User Manual](USER_MANUAL.md)**
-- **[Technical Specifications Specification](REQUIREMENTS.md)**
+- **[Technical Specifications](REQUIREMENTS.md)**
+- **[Audit Report](AUDIT_REPORT.md)** — Security and code quality audit
+
+---
+
+## 📊 Project Status
+
+| Metric | Value |
+|--------|-------|
+| **Tests** | 378 passing |
+| **Security Tests** | 85 |
+| **Code Quality** | A- |
+| **Status** | Production-Ready |
+| **Core Skills** | 17 |
+| **MCP Tools** | 29 + dynamic skills |
+
+**All identified gaps and audit findings have been resolved.** See [PROJECT_STATUS.md](PROJECT_STATUS.md) for details.
+
+---
+
+## 🧩 Skills & Micro-Skills
+
+### Core Skills (17 Built-in)
+
+| Category | Skills |
+|----------|--------|
+| **OS & Shell** | `core_os_shell`, `core_os_env_path`, `core_os_proc_monitor`, `core_process_manager` |
+| **File System** | `core_fs_windows_ops`, `core_file_watcher` |
+| **Data Processing** | `core_data_utilities`, `core_csv_processor`, `core_json_path`, `core_yaml_processor`, `core_regex_processor` |
+| **Networking** | `core_http_client`, `core_network_scanner` |
+| **System** | `core_env_inspector`, `core_system_health` |
+| **Messaging** | `core_notification_bridge` |
+| **Visualization** | `core_data_viz` |
+
+### Skill Types
+
+| Type | Description |
+|------|-------------|
+| `core` | Built-in OS base skills |
+| `variant` | Project-specific variants |
+| `genesis` | Forged by L0 Genesis pathway |
+| `ai_generated` | AI-synthesized at runtime |
+
+### AI-Driven Synthesis
+
+Complex intents that don't match existing skills trigger AI synthesis:
+1. Engine detects `synthesis_needed`
+2. AI agent generates Python code
+3. Code submitted via `submit_ai_skill` (sandbox-verified)
+4. Pipeline retries via `retry_intent`

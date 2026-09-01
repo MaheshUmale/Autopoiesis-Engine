@@ -1,0 +1,23 @@
+{
+  "id": "global.test_skill",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Test skill for Qdrant fallback",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "data": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "14bb77624d30b5114fcc6ef5a576d1db05928783730276cb40bfa7e79b3a1e58",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\global\\test_skill\\skill.py"
+}

@@ -1,0 +1,34 @@
+{
+  "id": "core_process_manager",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Process management: list, kill, and spawn processes.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "pid": {
+        "type": "integer"
+      },
+      "command": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "output": {
+        "type": "string"
+      }
+    }
+  },
+  "ast_hash": "07cab7428de76a79a0308953de8f3c800bbf64712c457bc61b0067cc31808ee2",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_process_manager\\skill.py"
+}

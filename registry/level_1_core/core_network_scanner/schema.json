@@ -1,0 +1,32 @@
+{
+  "id": "core_network_scanner",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Network diagnostics: DNS lookup, TCP connect, and HTTP HEAD checks.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "target": {
+        "type": "string"
+      },
+      "port": {
+        "type": "integer"
+      },
+      "timeout": {
+        "type": "number"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "results": {}
+    }
+  },
+  "ast_hash": "f5f2f09f7c41ab29ba62da11e9402d07f6851cc2b053ffc8648c52be24688c8d",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_network_scanner\\skill.py"
+}

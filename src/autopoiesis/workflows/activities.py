@@ -9,6 +9,7 @@ from opentelemetry import trace
 
 from autopoiesis.registry.manager import RegistryManager
 from autopoiesis.sandbox.executor import SandboxExecutor
+from autopoiesis.core.healing import HealLearningCache
 
 tracer = trace.get_tracer("autopoiesis.workflows.activities")
 
@@ -103,8 +104,9 @@ async def execute_micro_skill_activity(params: ExecuteSkillParams) -> Dict[str, 
 
 @activity.defn(name="heal_skill_activity")
 async def heal_skill_activity(params: HealSkillParams) -> Dict[str, Any]:
-    """Temporal activity to execute Diagnostic Decision Tree healing logic."""
+    """Temporal activity to execute Diagnostic Decision Tree healing logic with learned pattern cache."""
     base_dir = Path(params.base_dir or ".autopoiesis")
+    heal_cache = HealLearningCache(base_dir=base_dir)
     with tracer.start_as_current_span(f"heal_skill:{params.skill_id}") as span:
         span.set_attribute("skill.id", params.skill_id)
         span.set_attribute("error.type", params.error_type)
@@ -117,22 +119,49 @@ async def heal_skill_activity(params: HealSkillParams) -> Dict[str, Any]:
         skill_meta = registry.get_skill(params.skill_id)
         code_to_patch = params.python_code or (Path(skill_meta.file_path).read_text(encoding="utf-8") if skill_meta and skill_meta.file_path and Path(skill_meta.file_path).exists() else "")
 
-        patched_code = code_to_patch
+        # Check learned heal cache for a suggested fix first
+        suggested = heal_cache.find_suggested_fix(
+            skill_id=params.skill_id,
+            error_type=params.error_type,
+            error_msg=params.stderr or "",
+        )
 
-        # Diagnostic Decision Tree logic
-        if params.error_type == "SchemaValidationError":
-            return {
-                "action": "upstream_repair_required",
-                "patched_code": code_to_patch,
-                "message": "Input validation failed. Upstream node output must be repaired."
-            }
-        elif params.error_type in ("EnvironmentalError", "TimeoutError"):
-            patched_code += "\n# Auto-patched: added memory chunking / buffer flush\n"
-        elif params.error_type == "NetworkError":
-            if "import time" not in patched_code:
-                patched_code = "import time\n" + patched_code
+        patched_code = code_to_patch
+        fix_description = ""
+
+        if suggested:
+            # Use learned fix from cache
+            patched_code = suggested.fix_code_patch
+            fix_description = f"Applied learned fix: {suggested.fix_description}"
         else:
-            patched_code += "\n# Auto-patched: logic hotfix\n"
+            # Diagnostic Decision Tree logic (generic patches)
+            if params.error_type == "SchemaValidationError":
+                return {
+                    "action": "upstream_repair_required",
+                    "patched_code": code_to_patch,
+                    "message": "Input validation failed. Upstream node output must be repaired."
+                }
+            elif params.error_type in ("EnvironmentalError", "TimeoutError"):
+                patched_code = code_to_patch + "\n# Auto-patched: added memory chunking / buffer flush\n"
+                fix_description = "Generic patch: memory chunking / buffer flush"
+            elif params.error_type == "NetworkError":
+                if "import time" not in code_to_patch:
+                    patched_code = "import time\n" + code_to_patch
+                else:
+                    patched_code = code_to_patch + "\n# Auto-patched: added retry delay\n"
+                fix_description = "Generic patch: retry delay / time import"
+            else:
+                patched_code = code_to_patch + "\n# Auto-patched: logic hotfix\n"
+                fix_description = "Generic patch: logic hotfix"
+
+            # Learn this pattern for future use
+            heal_cache.learn_pattern(
+                skill_id=params.skill_id,
+                error_type=params.error_type,
+                error_msg=params.stderr or "",
+                fix_code_patch=patched_code,
+                fix_description=fix_description,
+            )
 
         # Save patched code back to skill file in registry
         if skill_meta and skill_meta.file_path:
@@ -150,5 +179,5 @@ async def heal_skill_activity(params: HealSkillParams) -> Dict[str, Any]:
         return {
             "action": "patched",
             "patched_code": patched_code,
-            "message": f"Skill '{params.skill_id}' patched for error type '{params.error_type}'."
+            "message": f"Skill '{params.skill_id}' patched for error type '{params.error_type}'. {fix_description}"
         }

@@ -1,0 +1,37 @@
+{
+  "id": "core_csv_processor",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Advanced CSV processing: read, filter, aggregate, and write.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "file_path": {
+        "type": "string"
+      },
+      "action": {
+        "type": "string"
+      },
+      "filter_column": {
+        "type": "string"
+      },
+      "filter_value": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "rows": {
+        "type": "array"
+      }
+    }
+  },
+  "ast_hash": "b7c2f6e04e712659fc21f451da213230af4705fa618e748926ac128fcc58624a",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_csv_processor\\skill.py"
+}

@@ -1,0 +1,36 @@
+{
+  "id": "core_http_client",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "HTTP request client for REST API calls with GET/POST/PUT/DELETE support.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string"
+      },
+      "method": {
+        "type": "string"
+      },
+      "headers": {
+        "type": "object"
+      },
+      "body": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "status_code": {
+        "type": "integer"
+      },
+      "body": {}
+    }
+  },
+  "ast_hash": "71e718da6826a2690e1c1262265235b7e29bff34f27059c4cdfb692cfbe1ff4e",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_http_client\\skill.py"
+}

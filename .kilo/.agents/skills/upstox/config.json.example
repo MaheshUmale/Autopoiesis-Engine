@@ -1,0 +1,8 @@
+{
+  "access_token": "YOUR ACCESS TOKEN",
+  "safety": {
+    "max_notional_warn": 50000,
+    "default_order_type": "LIMIT",
+    "require_order_confirmation": true
+  }
+}

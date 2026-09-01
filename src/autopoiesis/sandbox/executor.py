@@ -1,15 +1,20 @@
 import json
+import logging
+import os
+import re
 import sys
 import tempfile
 import subprocess
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Tuple
 from pydantic import BaseModel
 
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 from autopoiesis.core.platform import PlatformAdapter
+
+logger = logging.getLogger("autopoiesis.sandbox.executor")
 
 
 class SandboxResult(BaseModel):
@@ -19,6 +24,77 @@ class SandboxResult(BaseModel):
     stderr: str
     execution_time_sec: float
     error_type: str | None = None  # SchemaValidationError, LogicError, TimeoutError, EnvironmentalError, NetworkError
+
+
+# Resource limits for sandbox execution (fixes C-2)
+MAX_MEMORY_MB = 512  # Maximum memory per skill execution
+MAX_OUTPUT_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB max output size
+
+# Error classification patterns (fixes M-2)
+# Ordered by priority: first match wins
+ERROR_CLASSIFICATION_RULES: List[Tuple[str, re.Pattern]] = [
+    # Timeout errors
+    ("TimeoutError", re.compile(r"timed?\s*out|timeout", re.IGNORECASE)),
+    # Environmental errors (resource issues)
+    ("EnvironmentalError", re.compile(
+        r"MemoryError|cannot\s+allocate|OutOfMemory|resource\s+temporarily\s+unavailable|"
+        r"disk\s+full|No\s+space\s+left|too\s+many\s+open\s+files",
+        re.IGNORECASE
+    )),
+    # Network errors
+    ("NetworkError", re.compile(
+        r"ConnectionError|ConnectionRefused|ConnectionReset|HTTPError|URLError|"
+        r"socket\.error|requests\.exceptions|urllib\.error|"
+        r"Failed\s+to\s+establish|Name\s+or\s+service\s+not\s+known|"
+        r"getaddrinfo\s+failed|Temporary\s+failure\s+in\s+name\s+resolution",
+        re.IGNORECASE
+    )),
+    # Schema validation errors
+    ("SchemaValidationError", re.compile(
+        r"ValidationError|SchemaError|marshmallow|jsonschema|"
+        r"TypeError.*argument|TypeError.*required|missing\s+\d+\s+required|"
+        r"field\s+required|invalid\s+type|expected\s+type",
+        re.IGNORECASE
+    )),
+    # Logic errors (default for programming mistakes)
+    ("LogicError", re.compile(
+        r"SyntaxError|NameError|AttributeError|KeyError|IndexError|"
+        r"ValueError|TypeError|ZeroDivisionError|RuntimeError|"
+        r"NotImplementedError|AssertionError|ImportError|ModuleNotFoundError",
+        re.IGNORECASE
+    )),
+]
+
+
+def classify_error(stderr: str) -> str:
+    """Classify error type from stderr output using structured pattern matching.
+
+    Args:
+        stderr: Standard error output from failed skill execution
+
+    Returns:
+        Error type string (TimeoutError, EnvironmentalError, NetworkError,
+        SchemaValidationError, or LogicError)
+    """
+    if not stderr:
+        return "LogicError"
+
+    for error_type, pattern in ERROR_CLASSIFICATION_RULES:
+        if pattern.search(stderr):
+            return error_type
+
+    return "LogicError"  # Default fallback
+
+
+def _set_memory_limit():
+    """Set memory limit for the current process (Unix only)."""
+    if sys.platform != "win32":
+        try:
+            import resource
+            # Set virtual memory limit (soft, hard)
+            resource.setrlimit(resource.RLIMIT_AS, (MAX_MEMORY_MB * 1024 * 1024, MAX_MEMORY_MB * 1024 * 1024))
+        except (ImportError, ValueError) as e:
+            logger.debug(f"Could not set memory limit: {e}")
 
 
 class SandboxExecutor:
@@ -91,8 +167,8 @@ class SandboxExecutor:
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_path = Path(temp_dir)
             script_file = temp_path / "runner.py"
-            input_file = temp_path / "input.json"
-            output_file = temp_path / "output.json"
+            input_file = temp_path / "_runner_input.json"
+            output_file = temp_path / "_runner_output.json"
 
             input_file.write_text(json.dumps(hydrated_input), encoding="utf-8")
 
@@ -127,24 +203,23 @@ if __name__ == "__main__":
             start_time = time.time()
 
             try:
+                # Set up pre-exec function for resource limits (Unix)
+                preexec_fn = None
+                if sys.platform != "win32":
+                    preexec_fn = _set_memory_limit
+
                 proc = PlatformAdapter.run_command(
                     f'"{sys.executable}" runner.py',
                     cwd=temp_path,
                     timeout=timeout,
+                    shell=False,
+                    preexec_fn=preexec_fn,
                 )
                 exec_time = time.time() - start_time
 
                 if proc.returncode != 0:
-                    stderr = proc.stderr.strip()
-                    error_type = "LogicError"
-                    if "ValidationError" in stderr or "TypeError" in stderr and "argument" in stderr:
-                        error_type = "SchemaValidationError"
-                    elif "SyntaxError" in stderr or "NameError" in stderr or "AttributeError" in stderr:
-                        error_type = "LogicError"
-                    elif "HTTP" in stderr or "ConnectionError" in stderr:
-                        error_type = "NetworkError"
-                    elif "MemoryError" in stderr:
-                        error_type = "EnvironmentalError"
+                    stderr = proc.stderr.strip() if proc.stderr else ""
+                    error_type = classify_error(stderr)  # Use structured classification (fixes M-2)
 
                     return SandboxResult(
                         success=False,

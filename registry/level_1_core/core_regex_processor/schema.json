@@ -1,0 +1,34 @@
+{
+  "id": "core_regex_processor",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Regex processor: test, find, replace, and split text.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "pattern": {
+        "type": "string"
+      },
+      "text": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "matches": {
+        "type": "array"
+      }
+    }
+  },
+  "ast_hash": "41cde94999e578fd99d3d79cc75063cac9ff400b3b813fcfd88846c9b0630e47",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_regex_processor\\skill.py"
+}

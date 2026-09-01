@@ -10,6 +10,11 @@ mcp.json
 .cursor/mcp.json
 .kilocode/mcp.json
 
+# Root-level state artifacts (must reside in .autopoiesis/)
+autopoiesis.db
+qdrant/
+storage/
+
 # Environments
 .env
 .envrc

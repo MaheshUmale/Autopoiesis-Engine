@@ -110,32 +110,84 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     <div class="container-fluid px-4 mb-5">
         <!-- System Summary Cards -->
         <div class="row g-3 mb-4">
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="stat-card">
                     <div class="text-secondary small fw-semibold text-uppercase">Total Active Agents</div>
                     <div class="fs-2 fw-bold text-info mt-1" id="stat-total-agents">0</div>
                     <div class="text-secondary small mt-1">Level 1, Level 2 & Macro Templates</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="stat-card">
                     <div class="text-secondary small fw-semibold text-uppercase">Level 1 Core Base Pack</div>
                     <div class="fs-2 fw-bold text-success mt-1" id="stat-core-agents">0</div>
                     <div class="text-secondary small mt-1">Native OS & File Primitives</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="stat-card">
                     <div class="text-secondary small fw-semibold text-uppercase">Synthesized Variants</div>
                     <div class="fs-2 fw-bold text-purple mt-1" style="color: #c084fc;" id="stat-variant-agents">0</div>
                     <div class="text-secondary small mt-1">Domain-Specific Auto Skills</div>
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <div class="stat-card">
                     <div class="text-secondary small fw-semibold text-uppercase">Total Execution Runs</div>
                     <div class="fs-2 fw-bold text-warning mt-1" id="stat-execution-runs">0</div>
                     <div class="text-secondary small mt-1">Traces Recorded in .autopoiesis/</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-secondary small fw-semibold text-uppercase">Active Agent Sessions</div>
+                    <div class="fs-2 fw-bold text-success mt-1" id="stat-active-sessions">0</div>
+                    <div class="text-secondary small mt-1">
+                        <span class="status-dot active"></span><span id="stat-active-count">0</span> active |
+                        <span class="status-dot idle"></span><span id="stat-idle-count">0</span> idle |
+                        <span class="status-dot" style="background:#f59e0b" id="stat-stale-count">0</span> stale
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="text-secondary small fw-semibold text-uppercase">Session Memory</div>
+                    <div class="fs-2 fw-bold text-info mt-1" id="stat-total-memory">0</div>
+                    <div class="text-secondary small mt-1" id="stat-memory-detail">Total keys stored across sessions</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Active Sessions Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card bg-slate-800 border-slate-700">
+                    <div class="card-header border-slate-700 d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0 text-light"><i class="bi bi-people-fill text-success me-2"></i>Active Agent Sessions</h5>
+                        <span class="badge bg-success-subtle text-success">Live</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-dark table-hover table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Session ID</th>
+                                        <th>Agent ID</th>
+                                        <th>Namespace</th>
+                                        <th>Status</th>
+                                        <th>Invocations</th>
+                                        <th>Last Active</th>
+                                        <th>Memory Keys</th>
+                                        <th>Tags</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="sessions-table-body">
+                                    <tr><td colspan="9" class="text-center text-secondary">Loading active sessions...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -193,19 +245,115 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
         async function fetchDashboardData() {
             try {
-                const res = await fetch('/api/dashboard/agents');
-                const data = await res.json();
+                // Fetch agents data
+                const agentsRes = await fetch('/api/dashboard/agents');
+                const agentsData = await agentsRes.json();
 
-                allAgents = data.agents || [];
+                allAgents = agentsData.agents || [];
 
-                document.getElementById('stat-total-agents').innerText = data.stats.total || 0;
-                document.getElementById('stat-core-agents').innerText = data.stats.core || 0;
-                document.getElementById('stat-variant-agents').innerText = data.stats.variant || 0;
-                document.getElementById('stat-execution-runs').innerText = data.stats.execution_runs || 0;
+                document.getElementById('stat-total-agents').innerText = agentsData.stats.total || 0;
+                document.getElementById('stat-core-agents').innerText = agentsData.stats.core || 0;
+                document.getElementById('stat-variant-agents').innerText = agentsData.stats.variant || 0;
+                document.getElementById('stat-execution-runs').innerText = agentsData.stats.execution_runs || 0;
 
                 filterAgents();
+
+                // Fetch sessions data
+                const sessionsRes = await fetch('/api/dashboard/sessions');
+                const sessionsData = await sessionsRes.json();
+
+                document.getElementById('stat-active-sessions').innerText = sessionsData.stats.total || 0;
+                document.getElementById('stat-active-count').innerText = sessionsData.stats.active || 0;
+                document.getElementById('stat-idle-count').innerText = sessionsData.stats.idle || 0;
+                document.getElementById('stat-stale-count').innerText = sessionsData.stats.stale || 0;
+
+                const totalMemoryKeys = sessionsData.sessions.reduce((sum, s) => sum + (s.memory_keys?.length || 0), 0);
+                document.getElementById('stat-total-memory').innerText = totalMemoryKeys;
+                document.getElementById('stat-memory-detail').innerText = `${totalMemoryKeys} keys across ${sessionsData.sessions.length} sessions`;
+
+                renderSessionsTable(sessionsData.sessions || []);
             } catch (err) {
                 console.error('Failed to fetch dashboard data:', err);
+            }
+        }
+
+        function renderSessionsTable(sessions) {
+            const tbody = document.getElementById('sessions-table-body');
+            if (!tbody) return;
+
+            if (sessions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="text-center text-secondary">No active sessions</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = sessions.map(s => {
+                let statusClass = 'status-dot idle';
+                let statusText = 'IDLE';
+                if (s.status === 'active') {
+                    statusClass = 'status-dot active';
+                    statusText = 'ACTIVE';
+                } else if (s.status === 'stale') {
+                    statusClass = 'status-dot';
+                    statusText = 'STALE';
+                }
+
+                const lastActive = s.last_active_at ? new Date(s.last_active_at).toLocaleString() : 'N/A';
+                const memoryKeys = s.memory_keys?.join(', ') || '—';
+                const tags = s.tags?.join(', ') || '—';
+                const invocations = s.total_invocations || 0;
+
+                return `
+                    <tr>
+                        <td><code class="text-info small">${s.session_id}</code></td>
+                        <td><strong class="text-light">${s.agent_id}</strong></td>
+                        <td><span class="badge bg-secondary">${s.namespace}</span></td>
+                        <td><span class="${statusClass} me-1"></span><span class="small fw-semibold">${statusText}</span></td>
+                        <td><span class="text-info">${invocations}</span></td>
+                        <td class="text-secondary small">${lastActive}</td>
+                        <td class="text-secondary small">${memoryKeys}</td>
+                        <td class="text-secondary small">${tags}</td>
+                        <td>
+                            <button class="btn btn-outline-info btn-sm" onclick="openSessionDetail('${s.session_id}')">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function openSessionDetail(sessionId) {
+            try {
+                const res = await fetch('/api/dashboard/sessions');
+                const data = await res.json();
+                const session = (data.sessions || []).find(s => s.session_id === sessionId);
+                if (!session) return;
+
+                let details = `[SESSION DETAIL: ${sessionId}]\n`;
+                details += `Agent ID: ${session.agent_id}\n`;
+                details += `Namespace: ${session.namespace}\n`;
+                details += `Created: ${session.created_at}\n`;
+                details += `Last Active: ${session.last_active_at}\n`;
+                details += `Status: ${session.status}\n`;
+                details += `Idle: ${session.idle_seconds ? Math.round(session.idle_seconds) + 's' : 'N/A'}\n`;
+                details += `Invocations: ${session.total_invocations}\n`;
+                details += `Tags: ${session.tags?.join(', ') || '—'}\n`;
+                details += `Memory Keys: ${session.memory_keys?.join(', ') || '—'}\n`;
+                details += `Context: ${JSON.stringify(session.context, null, 2)}\n\n`;
+                details += `RECENT HISTORY:\n`;
+
+                if (session.recent_history?.length > 0) {
+                    session.recent_history.forEach(h => {
+                        details += `[${h.timestamp}] ${h.tool} -> ${h.success ? 'OK' : 'FAIL'}\n`;
+                        if (h.error) details += `  Error: ${h.error}\n`;
+                    });
+                } else {
+                    details += '(no recent history)';
+                }
+
+                alert(details);
+            } catch (err) {
+                alert('Failed to load session detail: ' + err);
             }
         }
 

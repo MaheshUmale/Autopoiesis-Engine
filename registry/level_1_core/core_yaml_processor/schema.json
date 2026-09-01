@@ -1,0 +1,30 @@
+{
+  "id": "core_yaml_processor",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Parse, query, and write YAML documents.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "action": {
+        "type": "string"
+      },
+      "file_path": {
+        "type": "string"
+      },
+      "data": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "data": {}
+    }
+  },
+  "ast_hash": "bb141ec334deb126ee37d06baa746720f74f0d268834774937ae8f91c3357839",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_yaml_processor\\skill.py"
+}

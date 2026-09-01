@@ -1,0 +1,35 @@
+{
+  "id": "core_data_viz",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Data visualization generator returning JSON chart spec.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "chart_type": {
+        "type": "string"
+      },
+      "data": {
+        "type": "array"
+      },
+      "labels": {
+        "type": "array"
+      },
+      "title": {
+        "type": "string"
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "chart_spec": {}
+    }
+  },
+  "ast_hash": "380a8e788173e2c8b552d33110793f569279e6bb98151448e434d8b334710297",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_data_viz\\skill.py"
+}

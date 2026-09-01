@@ -1,0 +1,25 @@
+{
+  "id": "trading.fetch_market_data",
+  "namespace": "trading",
+  "scope_level": "variant",
+  "description": "Variant skill for fetching OHLCV market data from a broker API (trading namespace).",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "symbol": {"type": "string"},
+      "interval": {"type": "string"},
+      "limit": {"type": "integer"}
+    },
+    "required": ["symbol"]
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {"type": "string"},
+      "candles": {"type": "array"}
+    }
+  },
+  "ast_hash": "replace_after_first_run",
+  "created_at": null,
+  "file_path": "registry/level_2_variants/trading/fetch_market_data/skill.py"
+}

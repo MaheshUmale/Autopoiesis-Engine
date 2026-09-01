@@ -1,0 +1,24 @@
+{
+  "id": "global.parse_data_json_76c01a",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Autonomously synthesized micro-skill: Parse data.json",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "payload": {}
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "output": {}
+    }
+  },
+  "ast_hash": "86229dff548cd9089f67fb9b108f781bb6140ab6630a7009705dd3e177f9931a",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\global\\parse_data_json_76c01a\\skill.py"
+}

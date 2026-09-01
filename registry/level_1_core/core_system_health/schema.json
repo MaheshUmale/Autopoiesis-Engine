@@ -1,0 +1,22 @@
+{
+  "id": "core_system_health",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "System health check: disk usage and platform info.",
+  "inputs": {
+    "type": "object",
+    "properties": {}
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "health": {}
+    }
+  },
+  "ast_hash": "0d2fe16f630e1dc16cd72ec3a5a82cc67b096fe5640c51ccd60fa8babfde03f9",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_system_health\\skill.py"
+}

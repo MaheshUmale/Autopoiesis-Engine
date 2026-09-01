@@ -1,0 +1,29 @@
+{
+  "id": "core_env_inspector",
+  "namespace": "global",
+  "scope_level": "core",
+  "description": "Detailed environment inspection: OS info, PATH, variables, Python env.",
+  "inputs": {
+    "type": "object",
+    "properties": {
+      "filter_vars": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "outputs": {
+    "type": "object",
+    "properties": {
+      "status": {
+        "type": "string"
+      },
+      "environment": {}
+    }
+  },
+  "ast_hash": "d78008dd2c73a8f205a3a71f72106e346d166a523139f7fe5e1648f0e98c2640",
+  "created_at": null,
+  "file_path": "D:\\Autopoiesis-Engine\\registry\\level_1_core\\core_env_inspector\\skill.py"
+}

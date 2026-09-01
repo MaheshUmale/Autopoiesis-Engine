@@ -1,0 +1,27 @@
+           _                 _    
+  __ _  __| |_ __ __ _ _ __ | |_  
+ / _` |/ _` | '__/ _` | '_ \| __| 
+| (_| | (_| | | | (_| | | | | |_  
+ \__, |\__,_|_|  \__,_|_| |_|\__| 
+    |_|                           
+
+Version: 1.19.0, build: 74f3e85b
+Access web UI at http://localhost:6333/dashboard
+Agentic Skills: https://skills.qdrant.tech/
+
+2026-08-31T10:49:55.025173Z  WARN qdrant::settings: Config file not found: config/config
+2026-08-31T10:49:55.025757Z  WARN qdrant::settings: Config file not found: config/development
+2026-08-31T10:49:55.048585Z  WARN qdrant: There is a potential issue with the filesystem for storage path D:/Autopoiesis-Engine/.autopoiesis/qdrant/storage. Details: Filesystem type check is not supported on this platform
+2026-08-31T10:49:55.049229Z  INFO storage::content_manager::consensus::persistent: Initializing new raft state at D:/Autopoiesis-Engine/.autopoiesis/qdrant/storage\raft_state.json
+2026-08-31T10:49:55.055625Z  INFO qdrant: Distributed mode disabled
+2026-08-31T10:49:55.055926Z  INFO qdrant: Telemetry reporting enabled, id: 1fd699bb-9b36-4aa5-8a33-76deaf25bb50
+2026-08-31T10:49:55.059895Z  WARN qdrant::actix::web_ui: Static content folder for Web UI './static' does not exist
+2026-08-31T10:49:55.060295Z  INFO qdrant::actix: REST transport settings: keep_alive=5s, client_request_timeout=5s, client_disconnect_timeout=5s
+2026-08-31T10:49:55.060394Z  INFO qdrant::actix: TLS disabled for REST API
+2026-08-31T10:49:55.062142Z  INFO qdrant::actix: Qdrant HTTP listening on 6333
+2026-08-31T10:49:55.062782Z  INFO actix_server::builder: starting 11 workers
+2026-08-31T10:49:55.062886Z  INFO actix_server::server: Actix runtime found; starting in Actix runtime
+2026-08-31T10:49:55.062959Z  INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6333", workers: 11, listening on: 0.0.0.0:6333
+2026-08-31T10:49:55.068574Z  INFO qdrant::tonic: Qdrant gRPC listening on 6334
+2026-08-31T10:49:55.068818Z  INFO qdrant::tonic: TLS disabled for gRPC API
+2026-08-31T12:08:30.296313Z  INFO actix_web::middleware::logger: 127.0.0.1 "GET /favicon.ico HTTP/1.1" 404 0 "-" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Code/1.124.0 Chrome/148.0.7778.97 Electron/42.2.0 Safari/537.36" 0.000185
